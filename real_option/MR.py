@@ -45,7 +45,7 @@ def MR2(T, dt, paths, sigma, S_0, theta, Sbar):
     return MR_matrix
 
 
-def MR3(T, dt, paths, sigma_g, sigma_e, S_0, theta_e, theta_g, Sbar):
+def MR3(T, dt, paths, sigma_g, sigma_e, S_0, theta_e, theta_g, Sbar, LR_0):
     tic = time.time()
     N = T * dt
     N = int(N)
@@ -56,18 +56,19 @@ def MR3(T, dt, paths, sigma_g, sigma_e, S_0, theta_e, theta_g, Sbar):
 
     # long run equilibrium level
     LR_eq = np.zeros_like(dW_E)
-    LR_eq[0] = Sbar # todo: is not Sbar, change
+    LR_eq[0] = LR_0
 
     # price matrix
     MR_matrix = np.zeros_like(dW_G)
     MR_matrix[0] = S_0
 
-    # todo: check code, check matrices
-    # todo: plot stochastic equilibrium level
     for i in range(1, N+1):
-        drift = (theta_e * (np.log(Sbar) - sigma_e**2/2*theta_e - np.log(LR_eq[i-1])))
+        drift = (theta_e * (np.log(Sbar) - (sigma_e**2)/(2*theta_e) - np.log(LR_eq[i - 1])))
         LR_eq[i] = LR_eq[i-1] * np.exp(drift * dt + dW_E[i])
         MR_matrix[i] = MR_matrix[i-1] * np.exp((theta_g * (np.log(LR_eq[i]) - sigma_g**2/2*theta_g - np.log(MR_matrix[i-1])))*dt + dW_G[i])
+
+    print("Average long run equilibrium value: ", np.sum(LR_eq[N]/paths))
+    print("Average value at T=", N, ": ",np.sum(MR_matrix[N] / paths))
 
     toc = time.time()
     elapsed_time = toc - tic
@@ -78,18 +79,26 @@ def MR3(T, dt, paths, sigma_g, sigma_e, S_0, theta_e, theta_g, Sbar):
 if __name__ == "__main__":
     T = 1
     dt = 365
-    paths = 14
+    paths = 500
 
-    theta = 0.8
-    sigma = 0.3
+    theta = 2
+    sigma = 0.2
     Sbar = 100 # long run equilibrium price
     S_0 = 100
 
+    LR_0 = 100  # initial equilibrium price
+    sigma_g = 0.2
+    sigma_e = 0.05
+    theta_e = 5
+    theta_g = 2
+
     MR1 = MR1(T, dt, paths, sigma, S_0, theta, Sbar)
     MR2 = MR2(T, dt, paths, sigma, S_0, theta, Sbar)
+    MR3 = MR3(T, dt, paths, sigma_g, sigma_e, S_0, theta_e, theta_g, Sbar, LR_0)
+
     N = T * dt
-    plt.plot(np.linspace(0, T, N+1), MR1, label="MR1")
-    plt.plot(np.linspace(0, T, N+1), MR2, label="MR1")
+    plt.plot(np.linspace(0, N, N + 1), MR2, label="MR2", c="b", alpha=0.3)
+    plt.plot(np.linspace(0, N + 1, N + 1), MR3, label="MR3", c="y", alpha=0.2)
 
     plt.show()
 
