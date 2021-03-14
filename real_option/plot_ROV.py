@@ -13,7 +13,7 @@ theta = 1.1
 sigma = 0.2
 Sbar = 100  # long run equilibrium price
 S_0 = 100
-mu = 0.2
+mu = 0.06
 
 LR_0 = 100  # initial equilibrium price
 sigma_g = 0.2
