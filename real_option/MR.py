@@ -20,7 +20,7 @@ def MR1(T, dt, paths, sigma, S_0, theta, Sbar):
 
     toc = time.time()
     elapsed_time = toc - tic
-    print('Total running time of MR1: {:.2f} seconds'.format(elapsed_time))
+    # print('Total running time of MR1: {:.2f} seconds'.format(elapsed_time))
 
     return MR_matrix
 
@@ -40,7 +40,7 @@ def MR2(T, dt, paths, sigma, S_0, theta, Sbar):
 
     toc = time.time()
     elapsed_time = toc - tic
-    print('Total running time of MR1: {:.2f} seconds'.format(elapsed_time))
+    # print('Total running time of MR1: {:.2f} seconds'.format(elapsed_time))
 
     return MR_matrix
 
@@ -67,12 +67,12 @@ def MR3(T, dt, paths, sigma_g, sigma_e, S_0, theta_e, theta_g, Sbar, LR_0):
         LR_eq[i] = LR_eq[i-1] * np.exp(drift * dt + dW_E[i])
         MR_matrix[i] = MR_matrix[i-1] * np.exp((theta_g * (np.log(LR_eq[i]) - sigma_g**2/2*theta_g - np.log(MR_matrix[i-1])))*dt + dW_G[i])
 
-    print("Average long run equilibrium value: ", np.sum(LR_eq[N]/paths))
-    print("Average value at T=", N, ": ",np.sum(MR_matrix[N] / paths))
+    # print("Average long run equilibrium value: ", np.sum(LR_eq[N]/paths))
+    # print("Average value at T=", N, ": ",np.sum(MR_matrix[N] / paths))
 
     toc = time.time()
     elapsed_time = toc - tic
-    print('Total running time of MR1: {:.2f} seconds'.format(elapsed_time))
+    # print('Total running time of MR1: {:.2f} seconds'.format(elapsed_time))
 
     return MR_matrix
 

@@ -1,6 +1,11 @@
 import numpy as np
-T = 2
-dt = 10
-N = dt * T
-print(np.linspace(0,N, N+1))
+import pandas as pd
 
+x = np.array([[12],[13],[14]])
+y = np.array([[2],[3],[4]])
+z = np.transpose(np.hstack((x,y)))
+
+ints = [1,2]
+string_ints = [str(int) for int in ints]
+
+df = pd.DataFrame(data=z, index=string_ints, columns=["GBM", "MR2", "MR3"])

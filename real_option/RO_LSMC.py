@@ -1,6 +1,6 @@
 import numpy as np
 import time
-
+import warnings
 
 def GBM(T, dt, paths, mu, sigma, S_0):
     # start timer
@@ -62,7 +62,7 @@ def LSMC_RO(price_matrix, r, paths, T, dt, A, Q, epsilon, OPEX, Tc, I):
         # meaning all paths are out of the money, never optimal to exercise
         if X1.count() > 0:
             regression = np.ma.polyfit(X1, Y1, 2)
-            # warnings.simplefilter('ignore', np.RankWarning)
+            warnings.simplefilter('ignore', np.RankWarning)
 
             # calculate continuation value
             cont_value = np.zeros_like(Y1)
@@ -83,9 +83,9 @@ def LSMC_RO(price_matrix, r, paths, T, dt, A, Q, epsilon, OPEX, Tc, I):
     # Time and print the elapsed time
     toc = time.time()
     elapsed_time = toc - tic
-    print('Total running time of LSMC: {:.2f} seconds'.format(elapsed_time))
+    #print('Total running time of LSMC: {:.2f} seconds'.format(elapsed_time))
 
-    # print("Value of this option is:", option_value)
+    print("Value of this option is:", option_value)
     # print("Ran this with T: ", T, " and dt: ", dt)
 
     return option_value
