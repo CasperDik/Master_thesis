@@ -83,7 +83,7 @@ def LSMC_RO(price_matrix, r, paths, T, dt, A, Q, epsilon, OPEX, Tc, I):
     # Time and print the elapsed time
     toc = time.time()
     elapsed_time = toc - tic
-    #print('Total running time of LSMC: {:.2f} seconds'.format(elapsed_time))
+    # print('Total running time of LSMC: {:.2f} seconds'.format(elapsed_time))
 
     print("Value of this option is:", option_value)
     # print("Ran this with T: ", T, " and dt: ", dt)
