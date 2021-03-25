@@ -1,4 +1,4 @@
-from LSMC.LSMC_American_option_faster import GBM
+from LSMC.LSMC_faster import GBM
 from real_option.MR import MR2, MR1, MR3
 import matplotlib.pyplot as plt
 import numpy as np

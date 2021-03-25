@@ -1,4 +1,4 @@
-from LSMC_American_option_faster import LSMC, GBM
+from LSMC_faster import LSMC, GBM
 import numpy as np
 from sklearn.linear_model import LinearRegression
 import pandas as pd

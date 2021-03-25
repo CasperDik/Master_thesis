@@ -11,8 +11,13 @@ def GBM(T, dt, paths, mu, sigma, S_0):
     N = int(N)
     dt = 1 / dt
 
-    price_matrix = np.exp((mu - sigma ** 2 / 2) * dt + sigma * np.random.normal(0, np.sqrt(dt), size=(paths, N)).T)
-    price_matrix = np.vstack([np.ones(paths), price_matrix])
+    # create wiener increments, half being antithetic
+    wiener = np.random.normal(0, np.sqrt(dt), size=(paths, N)).T
+    wiener_antithetic = wiener / -1
+    wiener = np.hstack((wiener, wiener_antithetic))
+
+    price_matrix = np.exp((mu - sigma ** 2 / 2) * dt + sigma * wiener)
+    price_matrix = np.vstack([np.ones(paths*2), price_matrix])
     price_matrix = S_0 * price_matrix.cumprod(axis=0)
 
     # Time and print the elapsed time
@@ -37,6 +42,35 @@ def payoff_executing(K, price, type):
         print("Error, only put or call is possible")
         raise SystemExit(0)
 
+def thresholdprice(B1,B2, alpha, K, X1):
+    if X1.count() > 0:
+        print(">", alpha, B1, B2)
+        threshold_price_plus = ((1-B1)+np.sqrt((B1-1)**2 - 4 * B2 * (alpha+K)))/(2*B2)
+        print(threshold_price_plus, "+")
+        threshold_price_minus = ((1 - B1) - np.sqrt((B1 - 1) ** 2 - 4 * B2 * (alpha + K))) / (2 * B2)
+        print(threshold_price_minus, "-")
+        threshold_price = min(abs(threshold_price_minus), abs(threshold_price_plus))
+    else:       # doesnt work because if all out of the money, there is no regression + function is not called
+        print("<=")
+        threshold_price_plus = (-B1 + np.sqrt(B1**2-4*B2*alpha))/(2*B2)
+        print(threshold_price_plus, "+")
+        threshold_price_minus = (-B1 - np.sqrt(B1**2-4*B2*alpha))/(2*B2)
+        print(threshold_price_minus, "-")
+        threshold_price = min(abs(threshold_price_minus), abs(threshold_price_plus))
+    print(threshold_price)
+
+    #if np.isnan(threshold_price) == True:
+    X = np.linspace(0, 400, 41)
+    imm_ex = payoff_executing(K, X, "call")
+    cont = alpha + B1*X + B2 * X**2
+    plt.plot(X, imm_ex, label="imm_ex", linewidth=0.2, alpha=1)
+    plt.plot(X, cont, label="continuation value", linewidth=0.2, alpha=1)
+    plt.legend()
+    plt.show()
+    # graph
+    # think it doesnt intersect
+
+    return threshold_price
 
 def LSMC(price_matrix, K, r, paths, T, dt, type):
     # start timer
@@ -55,14 +89,17 @@ def LSMC(price_matrix, K, r, paths, T, dt, type):
         sign = -1
 
     # cash flow matrix
-    cf_matrix = np.zeros((N + 1, paths))
+    cf_matrix = np.zeros((N + 1, paths*2))
 
     # calculated cf when executed in time T (cfs European option)
     cf_matrix[N] = payoff_executing(K, price_matrix[N], type)
 
     # 1 if in the money, otherwise 0
     execute = np.where(payoff_executing(K, price_matrix, type) > 0, 1, 0)
-    # execute = np.ones_like(execute)
+    # execute = np.ones_like(execute)       # use to convert to consider all paths
+
+    # threshold price matrix
+    # threshold_price = np.zeros((N+1, 1))
 
     for t in range(1, N):
         # discounted cf 1 time period
@@ -87,6 +124,12 @@ def LSMC(price_matrix, K, r, paths, T, dt, type):
             cont_value = np.zeros_like(Y1)
             cont_value = np.polyval(regression, X1)
 
+            # calculate threshold price
+            B2 = regression[0]
+            B1 = regression[1]
+            alpha = regression[2]
+            # threshold_price[N-t] = thresholdprice(B1, B2, alpha, K, X1)
+
             # update cash flow matrix
             imm_ex = payoff_executing(K, X1, type)
             cf_matrix[N - t] = np.ma.where(imm_ex > cont_value, imm_ex, cf_matrix[N - t + 1] * np.exp(-r))
@@ -96,18 +139,18 @@ def LSMC(price_matrix, K, r, paths, T, dt, type):
 
     # obtain option value
     cf_matrix[0] = cf_matrix[1] * np.exp(-r)
-    option_value = np.sum(cf_matrix[0]) / paths
-    st_dev = np.std(cf_matrix[0][cf_matrix[0] != 0])
+    option_value = np.sum(cf_matrix[0]) / (paths*2)
 
     # Time and print the elapsed time
     toc = time.time()
     elapsed_time = toc - tic
     print('Total running time of LSMC: {:.2f} seconds'.format(elapsed_time))
 
-    print("Value of this", type, "option is:", option_value, " with st dev: ", st_dev)
+    print("Value of this", type, "option is:", option_value)
     print("Ran this with T: ", T, " and dt: ", dt)
 
     return option_value
+
 
 if __name__ == "__main__":
     # inputs
@@ -120,18 +163,18 @@ if __name__ == "__main__":
     rf = 0.06
     """
 
-    paths = 100000
+    paths = 50000
     # years
     T = 1
     # execute possibilities per year
-    dt = 1000
+    dt = 50
 
-    K = 100
-    S_0 = 100
+    K = 40
+    S_0 = 36
     sigma = 0.2
     r = 0.06
-    q = 0.01
+    q = 0.00
     mu = r - q
 
     price_matrix = GBM(T, dt, paths, mu, sigma, S_0)
-    value = LSMC(price_matrix, K, r, paths, T, dt, "call")
+    value = LSMC(price_matrix, K, r, paths, T, dt, "put")
