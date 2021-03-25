@@ -4,7 +4,7 @@ import pandas as pd
 
 K = 40
 dt = 50
-paths = 100000
+paths = 50000
 mu = 0.06
 r = 0.06
 value = []
