@@ -119,7 +119,7 @@ def LSMC(price_matrix, K, r, paths, T, dt, type):
         # meaning all paths are out of the money, never optimal to exercise
         if X1.count() > 0:
             regression = np.ma.polyfit(X1, Y1, 2)
-            # warnings.simplefilter('ignore', np.RankWarning)
+            warnings.simplefilter('ignore', np.RankWarning)
             # calculate continuation value
             cont_value = np.zeros_like(Y1)
             cont_value = np.polyval(regression, X1)
