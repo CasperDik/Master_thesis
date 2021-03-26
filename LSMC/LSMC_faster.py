@@ -1,6 +1,7 @@
 import numpy as np
 import time
 import matplotlib.pyplot as plt
+import pandas as pd
 import warnings
 
 
@@ -97,6 +98,9 @@ def LSMC(price_matrix, K, r, paths, T, dt, type):
     # threshold price matrix
     threshold_price = np.zeros((N+1, 1))
 
+    # Dataframe to store continuation function
+    df = pd.DataFrame({"alpha": [],"B1": [], "B2": []})
+
     for t in range(1, N):
         # discounted cf 1 time period
         discounted_cf = cf_matrix[N - t + 1] * np.exp(-r)
@@ -124,6 +128,10 @@ def LSMC(price_matrix, K, r, paths, T, dt, type):
             B2 = regression[0]
             B1 = regression[1]
             alpha = regression[2]
+
+            cont_func = [alpha, B1, B2]
+            df.loc[len(df.index)] = cont_func
+
             # threshold_price[N-t] = thresholdprice(B1, B2, alpha, K, X1)
 
             # update cash flow matrix
@@ -145,6 +153,7 @@ def LSMC(price_matrix, K, r, paths, T, dt, type):
     print("Value of this", type, "option is:", option_value)
     print("Ran this with T: ", T, " and dt: ", dt)
 
+    df.to_excel("cont_func.xlsx")
     return option_value
 
 
@@ -159,13 +168,13 @@ if __name__ == "__main__":
     rf = 0.06
     """
 
-    paths = 15000
+    paths = 50000
     # years
-    T = 1
+    T = 30
     # execute possibilities per year
-    dt = 50
+    dt = 75
 
-    K = 32
+    K = 36
     S_0 = 36
     sigma = 0.2
     r = 0.06
