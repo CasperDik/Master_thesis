@@ -49,24 +49,25 @@ def thresholdprice(B1,B2, alpha, K, X1):
         print(threshold_price_plus, "+")
         threshold_price_minus = ((1 - B1) - np.sqrt((B1 - 1) ** 2 - 4 * B2 * (alpha + K))) / (2 * B2)
         print(threshold_price_minus, "-")
-        threshold_price = min(abs(threshold_price_minus), abs(threshold_price_plus))
-    else:       # doesnt work because if all out of the money, there is no regression + function is not called
+        threshold_price = min(threshold_price_minus, threshold_price_plus)
+
+    else:        # todo: doesnt work because if all out of the money, there is no regression + function is not called
         print("<=")
         threshold_price_plus = (-B1 + np.sqrt(B1**2-4*B2*alpha))/(2*B2)
         print(threshold_price_plus, "+")
         threshold_price_minus = (-B1 - np.sqrt(B1**2-4*B2*alpha))/(2*B2)
         print(threshold_price_minus, "-")
-        threshold_price = min(abs(threshold_price_minus), abs(threshold_price_plus))
+        threshold_price = min(threshold_price_minus, threshold_price_plus)
     print(threshold_price)
 
-    #if np.isnan(threshold_price) == True:
-    X = np.linspace(0, 400, 41)
-    imm_ex = payoff_executing(K, X, "call")
-    cont = alpha + B1*X + B2 * X**2
-    plt.plot(X, imm_ex, label="imm_ex", linewidth=0.2, alpha=1)
-    plt.plot(X, cont, label="continuation value", linewidth=0.2, alpha=1)
-    plt.legend()
-    plt.show()
+    if np.isnan(threshold_price) == True:
+        X = np.linspace(K, 2*K, 41)
+        imm_ex = payoff_executing(K, X, "call")
+        cont = alpha + B1*X + B2 * X**2
+        plt.plot(X, imm_ex, label="imm_ex", linewidth=0.2, alpha=1)
+        plt.plot(X, cont, label="continuation value", linewidth=0.2, alpha=1)
+        plt.legend()
+        plt.show()
     # graph
     # think it doesnt intersect
 
@@ -99,7 +100,7 @@ def LSMC(price_matrix, K, r, paths, T, dt, type):
     # execute = np.ones_like(execute)       # use to convert to consider all paths
 
     # threshold price matrix
-    # threshold_price = np.zeros((N+1, 1))
+    threshold_price = np.zeros((N+1, 1))
 
     for t in range(1, N):
         # discounted cf 1 time period
@@ -163,13 +164,13 @@ if __name__ == "__main__":
     rf = 0.06
     """
 
-    paths = 50000
+    paths = 15000
     # years
     T = 1
     # execute possibilities per year
     dt = 50
 
-    K = 40
+    K = 32
     S_0 = 36
     sigma = 0.2
     r = 0.06

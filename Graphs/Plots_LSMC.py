@@ -117,7 +117,7 @@ def american_vs_european(S_0, K, T, dt, mu, rf, sigma, paths):
     plt.plot(np.linspace(S_0 - S_0 / 2, S_0 + S_0 / 2, 20), BSM_put, label="BSM put", alpha=0.5)
 
     plt.legend()
-    plt.title("European option: BSM formula vs LSMC algorithm")
+    plt.title("European option - BSM formulas vs LSMC algorithm")
     plt.ylabel("Option value")
     plt.xlabel("Asset price, St")
     plt.show()
@@ -161,7 +161,7 @@ def convergence_american_perpetual(T, dt, paths, mu, sigma, S_0, type):
 
 if __name__ == "__main__":
     # inputs
-    paths = 10000
+    paths = 30000
 
     # years
     T = 1
@@ -171,9 +171,9 @@ if __name__ == "__main__":
 
     K = 130
     S_0 = 130
-    rf = 0.07
+    rf = 0.05
     sigma = 0.15
-    r = 0.07
+    r = 0.05
     q = 0.00
     mu = r - q
 
