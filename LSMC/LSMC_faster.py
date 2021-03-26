@@ -112,10 +112,10 @@ def LSMC(price_matrix, K, r, paths, T, dt, type):
         X1 = np.ma.masked_less_equal(X, 0)
         Y1 = np.ma.masked_less_equal(Y, 0) - 1
 
-        # meaning all paths are out of the money, never optimal to exercise
-        if X1.count() > 0:
+        if X1.count() > 0:      # meaning all paths are out of the money, thus never optimal to exercise
             regression = np.ma.polyfit(X1, Y1, 2)
-            warnings.simplefilter('ignore', np.RankWarning)
+            # warnings.simplefilter('ignore', np.RankWarning)
+
             # calculate continuation value
             cont_value = np.zeros_like(Y1)
             cont_value = np.polyval(regression, X1)
