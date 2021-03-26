@@ -84,11 +84,6 @@ def LSMC(price_matrix, K, r, paths, T, dt, type):
     # adjust yearly discount factor
     r = (1 + r) ** (1 / dt) - 1
 
-    # returns -1 if call, 1 for put --> this way the inequality statements can be used for both put and call
-    sign = 1
-    if type == "call":
-        sign = -1
-
     # cash flow matrix
     cf_matrix = np.zeros((N + 1, paths*2))
 
