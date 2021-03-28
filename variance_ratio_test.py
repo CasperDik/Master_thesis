@@ -4,11 +4,13 @@ import matplotlib.pyplot as plt
 
 df = pd.read_excel(r'C:\Users\Casper Dik\OneDrive\Documenten\MSc Finance\Master Thesis\Data\Gas prices\deflated gas price.xlsx', sheet_name="Sheet1")
 
-t = 2
+t = 10
 
 x = df["LRP3"][t:-1]
 y = df["LRP3"][t+1:, ]
 y = y.reset_index(drop=True)
+x = x.reset_index(drop=True)
+
 fd = y - x
 varfd = fd.var()
 
@@ -22,6 +24,7 @@ for k in lags:
     x = df["LRP3"][t:-k]
     y = df["LRP3"][t+k:, ]
     y = y.reset_index(drop=True)
+    x = x.reset_index(drop=True)
     kd = y - x
     varkd = kd.var()
     Rk.append(1/k * varkd / varfd)
