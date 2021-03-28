@@ -124,7 +124,7 @@ def LSMC(price_matrix, K, r, paths, T, dt, type):
     print("Value of this", type, "option is:", option_value)
     print("Ran this with T: ", T, " and dt: ", dt)
 
-    df.to_excel("cont_func.xlsx")
+    # df.to_excel("cont_func.xlsx")
     return option_value
 
 

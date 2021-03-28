@@ -22,6 +22,7 @@ def RO_compare_stochatic(T, dt, paths, mu, sigma, sigma_e, theta, theta_e, Sbar,
     Tc = 0.25
     r = 0.06
 
+    # use pandas here
     # generate option values from the different stochastic processes
     x = [[],[],[]]
     i = 0

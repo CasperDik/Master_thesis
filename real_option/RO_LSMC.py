@@ -1,6 +1,8 @@
 import numpy as np
 import time
 import warnings
+import pandas as pd
+from LSMC.LSMC_faster import thresholdprice
 
 def GBM(T, dt, paths, mu, sigma, S_0):
     # start timer
@@ -9,8 +11,13 @@ def GBM(T, dt, paths, mu, sigma, S_0):
     N = int(N)
     dt = 1 / dt
 
-    price_matrix = np.exp((mu - sigma ** 2 / 2) * dt + sigma * np.random.normal(0, np.sqrt(dt), size=(paths, N)).T)
-    price_matrix = np.vstack([np.ones(paths), price_matrix])
+    # create wiener increments, half being antithetic
+    wiener = np.random.normal(0, np.sqrt(dt), size=(paths, N)).T
+    wiener_antithetic = wiener / -1
+    wiener = np.hstack((wiener, wiener_antithetic))
+
+    price_matrix = np.exp((mu - sigma ** 2 / 2) * dt + sigma * wiener)
+    price_matrix = np.vstack([np.ones(paths*2), price_matrix])
     price_matrix = S_0 * price_matrix.cumprod(axis=0)
 
     # Time and print the elapsed time
@@ -19,7 +26,6 @@ def GBM(T, dt, paths, mu, sigma, S_0):
     print('Total running time of GBM: {:.2f} seconds'.format(elapsed_time))
 
     return price_matrix
-
 
 def LSMC_RO(price_matrix, r, paths, T, dt, A, Q, epsilon, OPEX, Tc, I):
     # start timer
@@ -33,18 +39,19 @@ def LSMC_RO(price_matrix, r, paths, T, dt, A, Q, epsilon, OPEX, Tc, I):
     r = (1 + r) ** (1 / dt) - 1
 
     # cash flow matrix
-    cf_matrix = np.zeros((N + 1, paths))
+    cf_matrix = np.zeros((N + 1, paths*2))
 
     # calculated cf when executed in time T (cfs European option)
     cf_matrix[N] = payoff_executing_RO(price_matrix[N], A, Q, epsilon, OPEX, r, Tc, I, T)
 
     # 1 if in the money, otherwise 0
     execute = np.where(payoff_executing_RO(price_matrix, A, Q, epsilon, OPEX, r, Tc, I, T) > 0, 1, 0)
+    # execute = np.ones_like(execute)       # use to convert to consider all paths
 
-    # consider all paths?
-    # execute = np.ones_like(execute)
+    # Dataframe to store continuation function
+    df = pd.DataFrame({"alpha": [],"B1": [], "B2": [], "threshold_price": []})
 
-    for t in range(1, N):
+    for t in range(1, N+1):
         # discounted cf 1 time period
         discounted_cf = cf_matrix[N - t + 1] * np.exp(-r)
 
@@ -68,6 +75,16 @@ def LSMC_RO(price_matrix, r, paths, T, dt, A, Q, epsilon, OPEX, Tc, I):
             cont_value = np.zeros_like(Y1)
             cont_value = np.polyval(regression, X1)
 
+            # calculate threshold price
+            """
+            makes it slower, so hide when not needed
+            B2 = regression[0]
+            B1 = regression[1]
+            alpha = regression[2]
+            cont_func = [alpha, B1, B2, thresholdprice(B1, B2, alpha, K)]
+            df.loc[len(df.index)] = cont_func
+            """
+
             # update cash flow matrix
             imm_ex = payoff_executing_RO(X1, A, Q, epsilon, OPEX, r, Tc, I, T)
             cf_matrix[N - t] = np.ma.where(imm_ex > cont_value, imm_ex, cf_matrix[N - t + 1] * np.exp(-r))
@@ -76,17 +93,15 @@ def LSMC_RO(price_matrix, r, paths, T, dt, A, Q, epsilon, OPEX, Tc, I):
             cf_matrix[N - t] = cf_matrix[N - t + 1] * np.exp(-r)
 
     # obtain option value
-    cf_matrix[0] = cf_matrix[1] * np.exp(-r)
-    option_value = np.sum(cf_matrix[0]) / paths
-    # st_dev = np.std(cf_matrix[0][cf_matrix[0] != 0])
+    option_value = np.sum(cf_matrix[0]) / paths*2
+
+    # df.to_excel("cont_func.xlsx")
 
     # Time and print the elapsed time
     toc = time.time()
     elapsed_time = toc - tic
-    # print('Total running time of LSMC: {:.2f} seconds'.format(elapsed_time))
-
+    print('Total running time of LSMC: {:.2f} seconds'.format(elapsed_time))
     print("Value of this option is:", option_value)
-    # print("Ran this with T: ", T, " and dt: ", dt)
 
     return option_value
 

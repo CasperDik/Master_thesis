@@ -12,6 +12,9 @@ def MR1(T, dt, paths, sigma, S_0, theta, Sbar):
     dt = 1 / dt
 
     wiener = (sigma * np.random.normal(0, np.sqrt(dt), size=(paths, N+1))).T
+    wiener_antithetic = wiener / -1
+    wiener = np.hstack((wiener, wiener_antithetic))
+
     MR_matrix = np.zeros_like(wiener)
     MR_matrix[0] = S_0
     for i in range(1, N+1):
@@ -32,6 +35,9 @@ def MR2(T, dt, paths, sigma, S_0, theta, Sbar):
     dt = 1 / dt
 
     wiener = (sigma * np.random.normal(0, np.sqrt(dt), size=(paths, N + 1))).T
+    wiener_antithetic = wiener / -1
+    wiener = np.hstack((wiener, wiener_antithetic))
+
     MR_matrix = np.zeros_like(wiener)
     MR_matrix[0] = S_0
     for i in range(1, N + 1):
@@ -52,7 +58,12 @@ def MR3(T, dt, paths, sigma_g, sigma_e, S_0, theta_e, theta_g, Sbar, LR_0):
     dt = 1 / dt
 
     dW_G = (sigma_g * np.random.normal(0, np.sqrt(dt), size=(paths, N + 1))).T
+    dW_G_antithetic = dW_G / -1
+    dW_G = np.hstack((dW_G, dW_G_antithetic))
+
     dW_E = (sigma_e * np.random.normal(0, np.sqrt(dt), size=(paths, N + 1))).T
+    dW_E_antithetic = dW_E / -1
+    dW_E = np.hstack((dW_E, dW_E_antithetic))
 
     # long run equilibrium level
     LR_eq = np.zeros_like(dW_E)
@@ -79,7 +90,7 @@ def MR3(T, dt, paths, sigma_g, sigma_e, S_0, theta_e, theta_g, Sbar, LR_0):
 if __name__ == "__main__":
     T = 1
     dt = 365
-    paths = 500
+    paths = 10
 
     theta = 2
     sigma = 0.2
@@ -97,6 +108,7 @@ if __name__ == "__main__":
     MR3 = MR3(T, dt, paths, sigma_g, sigma_e, S_0, theta_e, theta_g, Sbar, LR_0)
 
     N = T * dt
+    plt.plot(np.linspace(0, N, N + 1), MR1, label="MR1", c="r", alpha=0.3)
     plt.plot(np.linspace(0, N, N + 1), MR2, label="MR2", c="b", alpha=0.3)
     plt.plot(np.linspace(0, N + 1, N + 1), MR3, label="MR3", c="y", alpha=0.2)
 
