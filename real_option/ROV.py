@@ -3,7 +3,7 @@ def RO_compare_stochatic(T, dt, paths, mu, sigma, sigma_e, theta, theta_e, Sbar,
     from real_option.MR import MR2, MR3
     from real_option.RO_LSMC import GBM, LSMC_RO
 
-    # to better compare the prices, changes this later
+    # to better compare the prices--> changes this later
     sigma_g = sigma
     theta_g = theta
     LR_0 = Sbar
@@ -22,7 +22,6 @@ def RO_compare_stochatic(T, dt, paths, mu, sigma, sigma_e, theta, theta_e, Sbar,
     Tc = 0.25
     r = 0.06
 
-    # use pandas here
     # generate option values from the different stochastic processes
     x = [[],[],[]]
     i = 0
