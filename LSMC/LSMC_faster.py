@@ -43,35 +43,10 @@ def payoff_executing(K, price, type):
         print("Error, only put or call is possible")
         raise SystemExit(0)
 
-def thresholdprice(B1,B2, alpha, K, X1):
-    if X1.count() > 0:
-        print(">", alpha, B1, B2)
-        threshold_price_plus = ((1-B1)+np.sqrt((B1-1)**2 - 4 * B2 * (alpha+K)))/(2*B2)
-        print(threshold_price_plus, "+")
-        threshold_price_minus = ((1 - B1) - np.sqrt((B1 - 1) ** 2 - 4 * B2 * (alpha + K))) / (2 * B2)
-        print(threshold_price_minus, "-")
-        threshold_price = min(threshold_price_minus, threshold_price_plus)
-
-    else:        # todo: doesnt work because if all out of the money, there is no regression + function is not called
-        print("<=")
-        threshold_price_plus = (-B1 + np.sqrt(B1**2-4*B2*alpha))/(2*B2)
-        print(threshold_price_plus, "+")
-        threshold_price_minus = (-B1 - np.sqrt(B1**2-4*B2*alpha))/(2*B2)
-        print(threshold_price_minus, "-")
-        threshold_price = min(threshold_price_minus, threshold_price_plus)
-    print(threshold_price)
-
-    if np.isnan(threshold_price) == True:
-        X = np.linspace(K, 2*K, 41)
-        imm_ex = payoff_executing(K, X, "call")
-        cont = alpha + B1*X + B2 * X**2
-        plt.plot(X, imm_ex, label="imm_ex", linewidth=0.2, alpha=1)
-        plt.plot(X, cont, label="continuation value", linewidth=0.2, alpha=1)
-        plt.legend()
-        plt.show()
-    # graph
-    # think it doesnt intersect
-
+def thresholdprice(B1,B2, alpha, K):
+    threshold_price_plus = ((1-B1)+np.sqrt((B1-1)**2 - 4 * B2 * (alpha+K)))/(2*B2)
+    threshold_price_minus = ((1 - B1) - np.sqrt((B1 - 1) ** 2 - 4 * B2 * (alpha + K))) / (2 * B2)
+    threshold_price = min(threshold_price_minus, threshold_price_plus)
     return threshold_price
 
 def LSMC(price_matrix, K, r, paths, T, dt, type):
@@ -95,13 +70,10 @@ def LSMC(price_matrix, K, r, paths, T, dt, type):
     execute = np.where(payoff_executing(K, price_matrix, type) > 0, 1, 0)
     # execute = np.ones_like(execute)       # use to convert to consider all paths
 
-    # threshold price matrix
-    threshold_price = np.zeros((N+1, 1))
-
     # Dataframe to store continuation function
-    df = pd.DataFrame({"alpha": [],"B1": [], "B2": []})
+    df = pd.DataFrame({"alpha": [],"B1": [], "B2": [], "threshold_price": []})
 
-    for t in range(1, N):
+    for t in range(1, N+1):
         # discounted cf 1 time period
         discounted_cf = cf_matrix[N - t + 1] * np.exp(-r)
 
@@ -125,14 +97,14 @@ def LSMC(price_matrix, K, r, paths, T, dt, type):
             cont_value = np.polyval(regression, X1)
 
             # calculate threshold price
+            """
+            makes it slower, so hide when not needed
             B2 = regression[0]
             B1 = regression[1]
             alpha = regression[2]
-
-            cont_func = [alpha, B1, B2]
+            cont_func = [alpha, B1, B2, thresholdprice(B1, B2, alpha, K)]
             df.loc[len(df.index)] = cont_func
-
-            # threshold_price[N-t] = thresholdprice(B1, B2, alpha, K, X1)
+            """
 
             # update cash flow matrix
             imm_ex = payoff_executing(K, X1, type)
@@ -142,7 +114,6 @@ def LSMC(price_matrix, K, r, paths, T, dt, type):
             cf_matrix[N - t] = cf_matrix[N - t + 1] * np.exp(-r)
 
     # obtain option value
-    cf_matrix[0] = cf_matrix[1] * np.exp(-r)
     option_value = np.sum(cf_matrix[0]) / (paths*2)
 
     # Time and print the elapsed time
@@ -168,9 +139,9 @@ if __name__ == "__main__":
     rf = 0.06
     """
 
-    paths = 50000
+    paths = 200
     # years
-    T = 30
+    T = 5
     # execute possibilities per year
     dt = 75
 
