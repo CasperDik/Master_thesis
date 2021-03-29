@@ -19,6 +19,7 @@ Rk = []
 VARKD = []
 fd_xk = []
 
+
 for k in lags:
     k = int(k)
     x = df["LRP3"][t:-k]
@@ -31,5 +32,6 @@ for k in lags:
 
 
 rk = pd.DataFrame(data=Rk)
+rk.to_excel("data variance ratio test.xlsx")
 rk.plot(legend=False, title="Variance Ratio - Natural gas")
 plt.show()
