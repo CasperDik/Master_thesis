@@ -43,7 +43,7 @@ def payoff_executing(K, price, type):
         print("Error, only put or call is possible")
         raise SystemExit(0)
 
-def thresholdprice(B1,B2, alpha, K):
+def thresholdprice(B1, B2, alpha, K):
     threshold_price_plus = ((1-B1)+np.sqrt((B1-1)**2 - 4 * B2 * (alpha+K)))/(2*B2)
     threshold_price_minus = ((1 - B1) - np.sqrt((B1 - 1) ** 2 - 4 * B2 * (alpha + K))) / (2 * B2)
     threshold_price = min(threshold_price_minus, threshold_price_plus)
@@ -71,7 +71,7 @@ def LSMC(price_matrix, K, r, paths, T, dt, type):
     # execute = np.ones_like(execute)       # use to convert to consider all paths
 
     # Dataframe to store continuation function
-    df = pd.DataFrame({"alpha": [],"B1": [], "B2": [], "threshold_price": []})
+    # df = pd.DataFrame({"alpha": [],"B1": [], "B2": [], "threshold_price": []})
 
     for t in range(1, N+1):
         # discounted cf 1 time period
@@ -97,14 +97,13 @@ def LSMC(price_matrix, K, r, paths, T, dt, type):
             cont_value = np.polyval(regression, X1)
 
             # calculate threshold price
-            """
-            makes it slower, so hide when not needed
-            B2 = regression[0]
-            B1 = regression[1]
-            alpha = regression[2]
-            cont_func = [alpha, B1, B2, thresholdprice(B1, B2, alpha, K)]
-            df.loc[len(df.index)] = cont_func
-            """
+
+            # makes it much slower, so hide when not necessary
+            # B2 = regression[0]
+            # B1 = regression[1]
+            # alpha = regression[2]
+            # cont_func = [alpha, B1, B2, thresholdprice(B1, B2, alpha, K)]
+            # df.loc[len(df.index)] = cont_func
 
             # update cash flow matrix
             imm_ex = payoff_executing(K, X1, type)
