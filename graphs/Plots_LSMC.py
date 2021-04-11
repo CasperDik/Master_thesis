@@ -138,7 +138,7 @@ def convergence_american_perpetual(T, dt, paths, mu, sigma, S_0, type):
     for T in x:
         # slice = int(T*dt)
         price_matrix = GBM(T, dt, paths, mu, sigma, S_0)
-        val, st_dev = LSMC(price_matrix, K, rf, paths, T, dt, type)
+        val = LSMC(price_matrix, K, rf, paths, T, dt, type)
         lsmc_call.append(val)
         # confidence_interval_up.append(val + 1.96 * st_dev / np.sqrt(paths))
         # confidence_interval_down.append(val - 1.96 * st_dev / np.sqrt(paths))
@@ -158,23 +158,38 @@ def convergence_american_perpetual(T, dt, paths, mu, sigma, S_0, type):
     plt.plot()
     plt.show()
 
+def american_perpetual2(S_0, K, q, r, sigma, T, dt, paths, mu, type):
+    S = np.linspace(S_0 * 0.8, S_0 * 1.2, 10)
+    lsmc = []
+    for s in S:
+        price_matrix = GBM(T, dt, paths, mu, sigma, s)
+        val = LSMC(price_matrix, K, rf, paths, T, dt, type)
+        lsmc.append(val)
+
+    x = perpetual_american(K, S, q, r, sigma)
+    plt.plot(S, x)
+    plt.plot(S, lsmc)
+    plt.xlim(S_0*0.8-1, S_0*1.2+1)
+    plt.legend()
+    plt.show()
+
 
 if __name__ == "__main__":
     # inputs
-    paths = 30000
+    paths = 5000
 
     # years
-    T = 1
+    T = 25
     # execute possibilities per year
     # american option large dt
-    dt = 1
+    dt = 150
 
-    K = 130
-    S_0 = 130
+    K = 100
+    S_0 = 100
     rf = 0.05
     sigma = 0.15
     r = 0.05
-    q = 0.00
+    q = 0.01
     mu = r - q
 
     # perpetual_american(K, S_0, q, r, sigma)
@@ -183,6 +198,6 @@ if __name__ == "__main__":
     # plot_strike_LSMC(S_0, K, T, dt, mu, rf, sigma, paths)
     # plot_price_LSMC(S_0, K, T, dt, mu, rf, sigma, paths)
     # plot_maturity_LSMC(S_0, K, T, dt, mu, rf, sigma, paths)
-    american_vs_european(S_0, K, T, dt, mu, rf, sigma, paths)
+    # american_vs_european(S_0, K, T, dt, mu, rf, sigma, paths)
     # convergence_american_perpetual(T, dt, paths, mu, sigma, S_0, "call")
-
+    american_perpetual2(S_0, K, q, r, sigma, T, dt, paths, mu, "call")

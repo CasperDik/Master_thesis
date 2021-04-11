@@ -115,12 +115,16 @@ def LSMC(price_matrix, K, r, paths, T, dt, type):
     # obtain option value
     option_value = np.sum(cf_matrix[0]) / (paths*2)
 
+    # st dev
+    st_dev = np.std(cf_matrix[0])/np.sqrt(N)
+
     # Time and print the elapsed time
     toc = time.time()
     elapsed_time = toc - tic
     print('Total running time of LSMC: {:.2f} seconds'.format(elapsed_time))
 
     print("Value of this", type, "option is:", option_value)
+    print("St dev of this", type, "option is:", st_dev)
     print("Ran this with T: ", T, " and dt: ", dt)
 
     # df.to_excel("cont_func.xlsx")
