@@ -136,7 +136,7 @@ if __name__ == "__main__":
 
     paths = 10000
     # years
-    T = 35
+    T = 3
     # execute possibilities per year
     dt = 75
 

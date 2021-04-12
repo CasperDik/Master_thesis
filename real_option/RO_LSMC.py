@@ -2,7 +2,6 @@ import numpy as np
 import time
 import warnings
 import pandas as pd
-from LSMC.LSMC_faster import thresholdprice
 
 def GBM(T, dt, paths, mu, sigma, S_0):
     # start timer
@@ -27,7 +26,7 @@ def GBM(T, dt, paths, mu, sigma, S_0):
 
     return price_matrix
 
-def LSMC_RO(price_matrix, r, mu, paths, T, dt, A, Q, epsilon, O_M, Tc, I):
+def LSMC_RO(price_matrix, r, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I):
     # start timer
     tic = time.time()
 
@@ -42,14 +41,11 @@ def LSMC_RO(price_matrix, r, mu, paths, T, dt, A, Q, epsilon, O_M, Tc, I):
     cf_matrix = np.zeros((N + 1, paths*2))
 
     # calculated cf when executed in time T (cfs European option)
-    cf_matrix[N] = payoff_executing_RO(price_matrix[N], A, Q, epsilon, O_M, r, Tc, I, T)
+    cf_matrix[N] = payoff_executing_RO(price_matrix[N], A, Q, epsilon, O_M, r, Tc, I, T_plant)
 
     # 1 if in the money, otherwise 0
-    execute = np.where(payoff_executing_RO(price_matrix, A, Q, epsilon, O_M, r, Tc, I, T) > 0, 1, 0)
+    execute = np.where(payoff_executing_RO(price_matrix, A, Q, epsilon, O_M, r, Tc, I, T_plant) > 0, 1, 0)
     # execute = np.ones_like(execute)       # use to convert to consider all paths
-
-    # Dataframe to store continuation function
-    df = pd.DataFrame({"alpha": [],"B1": [], "B2": [], "threshold_price": []})
 
     for t in range(1, N+1):
         # discounted cf 1 time period
@@ -75,18 +71,8 @@ def LSMC_RO(price_matrix, r, mu, paths, T, dt, A, Q, epsilon, O_M, Tc, I):
             cont_value = np.zeros_like(Y1)
             cont_value = np.polyval(regression, X1)
 
-            # calculate threshold price
-            """
-            makes it slower, so hide when not needed
-            B2 = regression[0]
-            B1 = regression[1]
-            alpha = regression[2]
-            cont_func = [alpha, B1, B2, thresholdprice(B1, B2, alpha, K)]
-            df.loc[len(df.index)] = cont_func
-            """
-
             # update cash flow matrix
-            imm_ex = payoff_executing_RO(X1, A, Q, epsilon, O_M, r, Tc, I, T)
+            imm_ex = payoff_executing_RO(X1, A, Q, epsilon, O_M, r, Tc, I, T_plant)
             cf_matrix[N - t] = np.ma.where(imm_ex > cont_value, imm_ex, cf_matrix[N - t + 1] * np.exp(-r))
             cf_matrix[N - t + 1:] = np.ma.where(imm_ex > cont_value, 0, cf_matrix[N - t + 1:])
         else:
@@ -98,27 +84,26 @@ def LSMC_RO(price_matrix, r, mu, paths, T, dt, A, Q, epsilon, O_M, Tc, I):
     # st dev
     st_dev = np.std(cf_matrix[0])/np.sqrt(N)
 
-    # thresholdprice
-    thresholdprice = ((((I + option_value) * (r - mu) / (1 - Tc)) + O_M) / Q - A) / -epsilon
-    # df.to_excel("cont_func.xlsx")
+    # threshold price
+    DF = (1 - (1 + r) ** -T_plant) / r
+    threshold_price = (((I + option_value)/(DF*(1-Tc)) + O_M)/Q -A)/-epsilon
+
 
     # Time and print the elapsed time
     toc = time.time()
     elapsed_time = toc - tic
-    print('Total running time of LSMC: {:.2f} seconds'.format(elapsed_time))
-    print("Threshold price of the option is: ", thresholdprice)
+    print('Total running time of LSMC: {:.2f} seconds'.format(elapsed_time), "\n")
     print("Value of this option is:", option_value)
-    print("St dev of this", type, "option is:", st_dev)
+    print("St dev of this option is:", st_dev, "\n")
+    print("Threshold price of the option is: ", threshold_price)
 
-    return option_value, thresholdprice
+    return option_value, threshold_price
 
 
-def payoff_executing_RO(price, A, Q, epsilon, O_M, r, Tc, I, T):
-    # todo: is yearly adjust with dt?
-    # todo: check this payoff function, some brackets missing
+def payoff_executing_RO(price, A, Q, epsilon, O_M, r, Tc, I, T_plant):
     # discount factor
-    DF = (1-(1+r)**-T)/r
-    Payoff = (((A - epsilon * price) * Q - O_M) * (1 - Tc) * DF) - I
+    DF = (1-(1+r)**-T_plant)/r
+    Payoff = ((((A - epsilon * price) * Q - O_M) * (1 - Tc)) * DF) - I
     return Payoff.clip(min=0)
 
 
@@ -126,24 +111,24 @@ if __name__ == "__main__":
     # inputs
 
     # electricity price
-    A = 40
+    A = 30.38
     # Quantity per year
-    Q = 40000
+    Q = 4993200
     # efficiency rate of the plant
-    epsilon = 0.85
+    epsilon = 1/0.55
     # maintenance and operating cost per year
-    O_M = 40000
+    O_M = 13200000
     # initial investment
-    I = 1400000
+    I = 487200000
     # tax rate
-    Tc = 0.25
+    Tc = 0.21
     # discount rate (WACC?)
-    r = 0.06
+    r = 0.056
 
     # initial gas price
-    S_0 = 20
+    S_0 = 8.59+5
     # drift rate mu of gas price
-    mu = 0.02
+    mu = 0
     # volatility of the gas price
     sigma = 0.15
 
@@ -152,10 +137,10 @@ if __name__ == "__main__":
     # life of the option(in years)
     T = 5
     # time periods per year
-    dt = 365
+    dt = 25
 
     # number of paths per simulations
-    paths = 1000
+    paths = 40
 
     price_matrix = GBM(T, dt, paths, mu, sigma, S_0)
-    value = LSMC_RO(price_matrix, r, mu, paths, T, dt, A, Q, epsilon, O_M, Tc, I)
+    value = LSMC_RO(price_matrix, r, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I)
