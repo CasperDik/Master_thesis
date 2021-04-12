@@ -27,7 +27,7 @@ def GBM(T, dt, paths, mu, sigma, S_0):
 
     return price_matrix
 
-def LSMC_RO(price_matrix, r, paths, T, dt, A, Q, epsilon, O_M, Tc, I):
+def LSMC_RO(price_matrix, r, mu, paths, T, dt, A, Q, epsilon, O_M, Tc, I):
     # start timer
     tic = time.time()
 
@@ -95,6 +95,9 @@ def LSMC_RO(price_matrix, r, paths, T, dt, A, Q, epsilon, O_M, Tc, I):
     # obtain option value
     option_value = np.sum(cf_matrix[0]) / paths*2
 
+    # st dev
+    st_dev = np.std(cf_matrix[0])/np.sqrt(N)
+
     # thresholdprice
     thresholdprice = ((((I + option_value) * (r - mu) / (1 - Tc)) + O_M) / Q - A) / -epsilon
     # df.to_excel("cont_func.xlsx")
@@ -105,8 +108,9 @@ def LSMC_RO(price_matrix, r, paths, T, dt, A, Q, epsilon, O_M, Tc, I):
     print('Total running time of LSMC: {:.2f} seconds'.format(elapsed_time))
     print("Threshold price of the option is: ", thresholdprice)
     print("Value of this option is:", option_value)
+    print("St dev of this", type, "option is:", st_dev)
 
-    return option_value
+    return option_value, thresholdprice
 
 
 def payoff_executing_RO(price, A, Q, epsilon, O_M, r, Tc, I, T):
@@ -154,4 +158,4 @@ if __name__ == "__main__":
     paths = 1000
 
     price_matrix = GBM(T, dt, paths, mu, sigma, S_0)
-    value = LSMC_RO(price_matrix, r, paths, T, dt, A, Q, epsilon, O_M, Tc, I)
+    value = LSMC_RO(price_matrix, r, mu, paths, T, dt, A, Q, epsilon, O_M, Tc, I)

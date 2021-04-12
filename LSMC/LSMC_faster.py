@@ -70,9 +70,6 @@ def LSMC(price_matrix, K, r, paths, T, dt, type):
     execute = np.where(payoff_executing(K, price_matrix, type) > 0, 1, 0)
     # execute = np.ones_like(execute)       # use to convert to consider all paths
 
-    # Dataframe to store continuation function
-    # df = pd.DataFrame({"alpha": [],"B1": [], "B2": [], "threshold_price": []})
-
     for t in range(1, N+1):
         # discounted cf 1 time period
         discounted_cf = cf_matrix[N - t + 1] * np.exp(-r)
@@ -96,15 +93,6 @@ def LSMC(price_matrix, K, r, paths, T, dt, type):
             cont_value = np.zeros_like(Y1)
             cont_value = np.polyval(regression, X1)
 
-            # calculate threshold price
-
-            # makes it much slower, so hide when not necessary
-            # B2 = regression[0]
-            # B1 = regression[1]
-            # alpha = regression[2]
-            # cont_func = [alpha, B1, B2, thresholdprice(B1, B2, alpha, K)]
-            # df.loc[len(df.index)] = cont_func
-
             # update cash flow matrix
             imm_ex = payoff_executing(K, X1, type)
             cf_matrix[N - t] = np.ma.where(imm_ex > cont_value, imm_ex, cf_matrix[N - t + 1] * np.exp(-r))
@@ -118,16 +106,20 @@ def LSMC(price_matrix, K, r, paths, T, dt, type):
     # st dev
     st_dev = np.std(cf_matrix[0])/np.sqrt(N)
 
+    # threshold value
+    threshold_price = option_value + K
+
     # Time and print the elapsed time
     toc = time.time()
     elapsed_time = toc - tic
     print('Total running time of LSMC: {:.2f} seconds'.format(elapsed_time))
+    print("Ran this with T: ", T, " and dt: ", dt, "\n")
 
     print("Value of this", type, "option is:", option_value)
-    print("St dev of this", type, "option is:", st_dev)
-    print("Ran this with T: ", T, " and dt: ", dt)
+    print("St dev of this", type, "option is:", st_dev, "\n")
 
-    # df.to_excel("cont_func.xlsx")
+    print("Threshold price of the option is: ", threshold_price)
+
     return option_value
 
 
