@@ -27,7 +27,7 @@ def GBM(T, dt, paths, mu, sigma, S_0):
 
     return price_matrix
 
-def LSMC_RO(price_matrix, r, paths, T, dt, A, Q, epsilon, OPEX, Tc, I):
+def LSMC_RO(price_matrix, r, paths, T, dt, A, Q, epsilon, O_M, Tc, I):
     # start timer
     tic = time.time()
 
@@ -42,10 +42,10 @@ def LSMC_RO(price_matrix, r, paths, T, dt, A, Q, epsilon, OPEX, Tc, I):
     cf_matrix = np.zeros((N + 1, paths*2))
 
     # calculated cf when executed in time T (cfs European option)
-    cf_matrix[N] = payoff_executing_RO(price_matrix[N], A, Q, epsilon, OPEX, r, Tc, I, T)
+    cf_matrix[N] = payoff_executing_RO(price_matrix[N], A, Q, epsilon, O_M, r, Tc, I, T)
 
     # 1 if in the money, otherwise 0
-    execute = np.where(payoff_executing_RO(price_matrix, A, Q, epsilon, OPEX, r, Tc, I, T) > 0, 1, 0)
+    execute = np.where(payoff_executing_RO(price_matrix, A, Q, epsilon, O_M, r, Tc, I, T) > 0, 1, 0)
     # execute = np.ones_like(execute)       # use to convert to consider all paths
 
     # Dataframe to store continuation function
@@ -86,7 +86,7 @@ def LSMC_RO(price_matrix, r, paths, T, dt, A, Q, epsilon, OPEX, Tc, I):
             """
 
             # update cash flow matrix
-            imm_ex = payoff_executing_RO(X1, A, Q, epsilon, OPEX, r, Tc, I, T)
+            imm_ex = payoff_executing_RO(X1, A, Q, epsilon, O_M, r, Tc, I, T)
             cf_matrix[N - t] = np.ma.where(imm_ex > cont_value, imm_ex, cf_matrix[N - t + 1] * np.exp(-r))
             cf_matrix[N - t + 1:] = np.ma.where(imm_ex > cont_value, 0, cf_matrix[N - t + 1:])
         else:
@@ -95,21 +95,26 @@ def LSMC_RO(price_matrix, r, paths, T, dt, A, Q, epsilon, OPEX, Tc, I):
     # obtain option value
     option_value = np.sum(cf_matrix[0]) / paths*2
 
+    # thresholdprice
+    thresholdprice = ((((I + option_value) * (r - mu) / (1 - Tc)) + O_M) / Q - A) / -epsilon
     # df.to_excel("cont_func.xlsx")
 
     # Time and print the elapsed time
     toc = time.time()
     elapsed_time = toc - tic
     print('Total running time of LSMC: {:.2f} seconds'.format(elapsed_time))
+    print("Threshold price of the option is: ", thresholdprice)
     print("Value of this option is:", option_value)
 
     return option_value
 
 
-def payoff_executing_RO(price, A, Q, epsilon, OPEX, r, Tc, I, T):
+def payoff_executing_RO(price, A, Q, epsilon, O_M, r, Tc, I, T):
+    # todo: is yearly adjust with dt?
+    # todo: check this payoff function, some brackets missing
     # discount factor
     DF = (1-(1+r)**-T)/r
-    Payoff = (((A - epsilon * price) * Q - OPEX) * (1 - Tc) * DF) - I
+    Payoff = (((A - epsilon * price) * Q - O_M) * (1 - Tc) * DF) - I
     return Payoff.clip(min=0)
 
 
@@ -123,7 +128,7 @@ if __name__ == "__main__":
     # efficiency rate of the plant
     epsilon = 0.85
     # maintenance and operating cost per year
-    OPEX = 40000
+    O_M = 40000
     # initial investment
     I = 1400000
     # tax rate
@@ -149,4 +154,4 @@ if __name__ == "__main__":
     paths = 1000
 
     price_matrix = GBM(T, dt, paths, mu, sigma, S_0)
-    value = LSMC_RO(price_matrix, r, paths, T, dt, A, Q, epsilon, OPEX, Tc, I)
+    value = LSMC_RO(price_matrix, r, paths, T, dt, A, Q, epsilon, O_M, Tc, I)
