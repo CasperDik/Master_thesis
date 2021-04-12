@@ -3,6 +3,7 @@ from graphs.european_LSMC_vs_analytical import BSM
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
+from graphs.convergence_perpetual import LSMC1
 
 def plot_volatility_LSMC(S_0, K, T, dt, mu, rf, sigma, paths):
     LSMC_call = []
@@ -163,12 +164,12 @@ def american_perpetual2(S_0, K, q, r, sigma, T, dt, paths, mu, type):
     lsmc = []
     for s in S:
         price_matrix = GBM(T, dt, paths, mu, sigma, s)
-        val = LSMC(price_matrix, K, rf, paths, T, dt, type)
+        val = LSMC1(price_matrix, K, rf, paths, T, dt, type)
         lsmc.append(val)
 
     x = perpetual_american(K, S, q, r, sigma)
-    plt.plot(S, x)
-    plt.plot(S, lsmc)
+    plt.plot(S, x, label="analytical")
+    plt.plot(S, lsmc, label="cont val at T=25")
     plt.xlim(S_0*0.8-1, S_0*1.2+1)
     plt.legend()
     plt.show()
@@ -179,10 +180,10 @@ if __name__ == "__main__":
     paths = 5000
 
     # years
-    T = 25
+    T = 35
     # execute possibilities per year
     # american option large dt
-    dt = 150
+    dt = 50
 
     K = 100
     S_0 = 100
