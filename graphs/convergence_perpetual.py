@@ -26,8 +26,8 @@ def LSMC1(price_matrix, K, r, paths, T, dt, type):
     # execute = np.ones_like(execute)       # use to convert to consider all paths
 
     # end year = 35
-    ey = 35
-    # total - end?
+    ey = 25
+    # total - end
     endloop = N - ey * dt + 1
     for t in range(1, endloop):
         # discounted cf 1 time period
@@ -79,5 +79,5 @@ def LSMC1(price_matrix, K, r, paths, T, dt, type):
 
     print("Threshold price of the option is: ", threshold_price)
 
-    return option_value
+    return option_value, st_dev
 

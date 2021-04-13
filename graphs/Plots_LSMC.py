@@ -160,40 +160,42 @@ def convergence_american_perpetual(T, dt, paths, mu, sigma, S_0, type):
     plt.show()
 
 def american_perpetual2(S_0, K, q, r, sigma, T, dt, paths, mu, type):
-    S = np.linspace(S_0 * 0.8, S_0 * 1.2, 10)
+    S = np.linspace(S_0 * 0.7, S_0 * 1.3, 10)
     lsmc = []
     perp = []
     for s in S:
         price_matrix = GBM(T, dt, paths, mu, sigma, s)
-        val = LSMC1(price_matrix, K, rf, paths, T, dt, type)
+        val, st_dev = LSMC1(price_matrix, K, rf, paths, T, dt, type)
         lsmc.append(val)
 
         x = perpetual_american(K, s, q, r, sigma)
         perp.append(x)
 
     plt.plot(S, perp, label="analytical")
-    plt.plot(S, lsmc, label="cont val at T=25")
-    plt.xlim(S_0*0.8-1, S_0*1.2+1)
+    plt.plot(S, lsmc, label="continuation value")
+    plt.xlim(S_0*0.7-10, S_0*1.3+10)
+    plt.ylim(40,130)
+    plt.xlabel("Stock price")
+    plt.ylabel("Option value")
     plt.legend()
     plt.show()
 
-
 if __name__ == "__main__":
     # inputs
-    paths = 5000
+    paths = 7500
 
     # years
-    T = 39
-    # execute possibilities per year
-    # american option large dt
-    dt = 185
+    T = 30
 
-    K = 100
-    S_0 = 100
+    # execute possibilities per year
+    dt = 365
+
+    K = 120
+    S_0 = 130
     rf = 0.05
-    sigma = 0.25
+    sigma = 0.15
     r = 0.05
-    q = 0.000001
+    q = 0.01
     mu = r - q
 
     # perpetual_american(K, S_0, q, r, sigma)
