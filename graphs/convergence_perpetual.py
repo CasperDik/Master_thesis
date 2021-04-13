@@ -1,8 +1,9 @@
 from LSMC.LSMC_faster import GBM, payoff_executing
 import numpy as np
 import time
+import matplotlib.pyplot as plt
 
-# same but stops at year 25 and returns continuation function
+# same but stops at year 35 and returns continuation function
 def LSMC1(price_matrix, K, r, paths, T, dt, type):
     # start timer
     tic = time.time()
@@ -24,7 +25,11 @@ def LSMC1(price_matrix, K, r, paths, T, dt, type):
     execute = np.where(payoff_executing(K, price_matrix, type) > 0, 1, 0)
     # execute = np.ones_like(execute)       # use to convert to consider all paths
 
-    for t in range(25*dt, N+1):
+    # end year = 35
+    ey = 35
+    # total - end?
+    endloop = N - ey * dt + 1
+    for t in range(1, endloop):
         # discounted cf 1 time period
         discounted_cf = cf_matrix[N - t + 1] * np.exp(-r)
 
@@ -54,11 +59,11 @@ def LSMC1(price_matrix, K, r, paths, T, dt, type):
         else:
             cf_matrix[N - t] = cf_matrix[N - t + 1] * np.exp(-r)
 
-    # option value is average of continuation value in year 25
-    option_value = np.sum(cont_value) / (paths*2)
+    # option value is average of continuation value in year 35
+    option_value = np.sum(cont_value) / (paths*2) * np.exp(-r*dt*ey)
 
     # st dev
-    st_dev = np.std(cont_value)/np.sqrt(N)
+    st_dev = np.std(cont_value)/np.sqrt(paths)
 
     # threshold value
     threshold_price = option_value + K
@@ -76,19 +81,3 @@ def LSMC1(price_matrix, K, r, paths, T, dt, type):
 
     return option_value
 
-if __name__ == "__main__":
-    paths = 10000
-    # years
-    T = 35
-    # execute possibilities per year
-    dt = 75
-
-    K = 36
-    S_0 = 36
-    sigma = 0.2
-    r = 0.06
-    q = 0.00
-    mu = r - q
-
-    price_matrix = GBM(T, dt, paths, mu, sigma, S_0)
-    value = LSMC1(price_matrix, K, r, paths, T, dt, "put")

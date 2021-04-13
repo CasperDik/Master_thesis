@@ -82,7 +82,7 @@ def LSMC_RO(price_matrix, r, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I):
     option_value = np.sum(cf_matrix[0]) / paths*2
 
     # st dev
-    st_dev = np.std(cf_matrix[0])/np.sqrt(N)
+    st_dev = np.std(cf_matrix[0])/np.sqrt(paths)
 
     # threshold price
     DF = (1 - (1 + r) ** -T_plant) / r
