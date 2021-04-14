@@ -79,5 +79,5 @@ def LSMC1(price_matrix, K, r, paths, T, dt, type):
 
     print("Threshold price of the option is: ", threshold_price)
 
-    return option_value, st_dev
+    return option_value
 

@@ -165,7 +165,7 @@ def american_perpetual2(S_0, K, q, r, sigma, T, dt, paths, mu, type):
     perp = []
     for s in S:
         price_matrix = GBM(T, dt, paths, mu, sigma, s)
-        val, st_dev = LSMC1(price_matrix, K, rf, paths, T, dt, type)
+        val = LSMC1(price_matrix, K, rf, paths, T, dt, type)
         lsmc.append(val)
 
         x = perpetual_american(K, s, q, r, sigma)
@@ -182,13 +182,13 @@ def american_perpetual2(S_0, K, q, r, sigma, T, dt, paths, mu, type):
 
 if __name__ == "__main__":
     # inputs
-    paths = 7500
+    paths = 5000
 
     # years
     T = 30
 
     # execute possibilities per year
-    dt = 365
+    dt = 185
 
     K = 120
     S_0 = 130
