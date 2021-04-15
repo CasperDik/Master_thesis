@@ -26,7 +26,7 @@ def GBM(T, dt, paths, mu, sigma, S_0):
 
     return price_matrix
 
-def LSMC_RO(price_matrix, r, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I):
+def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, S_0):
     # start timer
     tic = time.time()
 
@@ -35,16 +35,16 @@ def LSMC_RO(price_matrix, r, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I):
     N = int(N)
 
     # adjust yearly discount factor
-    r = (1 + r) ** (1 / dt) - 1
+    r = (1 + wacc) ** (1 / dt) - 1
 
     # cash flow matrix
     cf_matrix = np.zeros((N + 1, paths*2))
 
     # calculated cf when executed in time T (cfs European option)
-    cf_matrix[N] = payoff_executing_RO(price_matrix[N], A, Q, epsilon, O_M, r, Tc, I, T_plant)
+    cf_matrix[N] = payoff_executing_RO(price_matrix[N], A, Q, epsilon, O_M, wacc, Tc, I, T_plant, S_0)
 
     # 1 if in the money, otherwise 0
-    execute = np.where(payoff_executing_RO(price_matrix, A, Q, epsilon, O_M, r, Tc, I, T_plant) > 0, 1, 0)
+    execute = np.where(payoff_executing_RO(price_matrix, A, Q, epsilon, O_M, wacc, Tc, I, T_plant, S_0) > 0, 1, 0)
     # execute = np.ones_like(execute)       # use to convert to consider all paths
 
     for t in range(1, N+1):
@@ -72,22 +72,17 @@ def LSMC_RO(price_matrix, r, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I):
             cont_value = np.polyval(regression, X1)
 
             # update cash flow matrix
-            imm_ex = payoff_executing_RO(X1, A, Q, epsilon, O_M, r, Tc, I, T_plant)
+            imm_ex = payoff_executing_RO(X1, A, Q, epsilon, O_M, wacc, Tc, I, T_plant, S_0)
             cf_matrix[N - t] = np.ma.where(imm_ex > cont_value, imm_ex, cf_matrix[N - t + 1] * np.exp(-r))
             cf_matrix[N - t + 1:] = np.ma.where(imm_ex > cont_value, 0, cf_matrix[N - t + 1:])
         else:
             cf_matrix[N - t] = cf_matrix[N - t + 1] * np.exp(-r)
 
     # obtain option value
-    option_value = np.sum(cf_matrix[0]) / paths*2
+    option_value = np.sum(cf_matrix[0])/ (paths*2)
 
     # st dev
     st_dev = np.std(cf_matrix[0])/np.sqrt(paths)
-
-    # threshold price
-    DF = (1 - (1 + r) ** -T_plant) / r
-    threshold_price = (((I + option_value)/(DF*(1-Tc)) + O_M)/Q -A)/-epsilon
-
 
     # Time and print the elapsed time
     toc = time.time()
@@ -95,15 +90,14 @@ def LSMC_RO(price_matrix, r, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I):
     print('Total running time of LSMC: {:.2f} seconds'.format(elapsed_time), "\n")
     print("Value of this option is:", option_value)
     print("St dev of this option is:", st_dev, "\n")
-    print("Threshold price of the option is: ", threshold_price)
 
-    return option_value, threshold_price
+    return option_value
 
 
-def payoff_executing_RO(price, A, Q, epsilon, O_M, r, Tc, I, T_plant):
+def payoff_executing_RO(price, A, Q, epsilon, O_M, wacc, Tc, I, T_plant, S_0):
     # discount factor
-    DF = (1-(1+r)**-T_plant)/r
-    Payoff = ((((A - epsilon * price) * Q - O_M) * (1 - Tc)) * DF) - I
+    DF = (1-(1+wacc)**(-T_plant))/wacc
+    Payoff = (((A - epsilon * price) * Q - O_M) * (1 - Tc) * DF) - I
     return Payoff.clip(min=0)
 
 
@@ -123,24 +117,24 @@ if __name__ == "__main__":
     # tax rate
     Tc = 0.21
     # discount rate (WACC?)
-    r = 0.056
+    wacc = 0.056
 
     # initial gas price
-    S_0 = 8.59+5
+    S_0 = 8.00
     # drift rate mu of gas price
-    mu = 0
+    mu = 0.0
     # volatility of the gas price
-    sigma = 0.15
+    sigma = 0.4
 
     # life of the power plant(in years)
     T_plant = 30
     # life of the option(in years)
-    T = 5
+    T = 1
     # time periods per year
-    dt = 25
+    dt = 10
 
     # number of paths per simulations
-    paths = 40
+    paths = 10000
 
     price_matrix = GBM(T, dt, paths, mu, sigma, S_0)
-    value = LSMC_RO(price_matrix, r, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I)
+    value = LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, S_0)

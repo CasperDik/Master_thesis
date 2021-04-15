@@ -47,6 +47,7 @@ def thresholdprice(B1, B2, alpha, K):
     threshold_price_plus = ((1-B1)+np.sqrt((B1-1)**2 - 4 * B2 * (alpha+K)))/(2*B2)
     threshold_price_minus = ((1 - B1) - np.sqrt((B1 - 1) ** 2 - 4 * B2 * (alpha + K))) / (2 * B2)
     threshold_price = min(threshold_price_minus, threshold_price_plus)
+    print(threshold_price)
     return threshold_price
 
 def LSMC(price_matrix, K, r, paths, T, dt, type):
@@ -92,6 +93,7 @@ def LSMC(price_matrix, K, r, paths, T, dt, type):
             # calculate continuation value
             cont_value = np.zeros_like(Y1)
             cont_value = np.polyval(regression, X1)
+            # thresholdprice(regression[1], regression[0], regression[2], K)
 
             # update cash flow matrix
             imm_ex = payoff_executing(K, X1, type)
@@ -106,9 +108,6 @@ def LSMC(price_matrix, K, r, paths, T, dt, type):
     # st dev
     st_dev = np.std(cf_matrix[0])/np.sqrt(paths)
 
-    # threshold value
-    threshold_price = option_value + K
-
     # Time and print the elapsed time
     toc = time.time()
     elapsed_time = toc - tic
@@ -117,8 +116,6 @@ def LSMC(price_matrix, K, r, paths, T, dt, type):
 
     print("Value of this", type, "option is:", option_value)
     print("St dev of this", type, "option is:", st_dev, "\n")
-
-    print("Threshold price of the option is: ", threshold_price)
 
     return option_value
 
@@ -136,9 +133,9 @@ if __name__ == "__main__":
 
     paths = 10000
     # years
-    T = 3
+    T = 1
     # execute possibilities per year
-    dt = 75
+    dt = 185
 
     K = 36
     S_0 = 36
