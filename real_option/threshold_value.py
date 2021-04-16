@@ -66,7 +66,6 @@ if __name__ == "__main__":
     thresholdvalue = (S_0[idx-1] + S_0[idx])/2
 
     #todo: store estimates or sth to make faster
-    #todo: bigger steps in the beginning
     price_matrix = GBM(T, dt, paths, mu, sigma, thresholdvalue)
     value = LSMC_RO(price_matrix, r, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, thresholdvalue)
     npv = NPV1(thresholdvalue, A, Q, epsilon, O_M, r, Tc, I, T_plant)
