@@ -27,7 +27,7 @@ if __name__ == "__main__":
     r = 0.056
 
     # initial gas price
-    S_0 = np.linspace(0.5,15,40)
+    S_0 = np.linspace(0.5,15,20)
     # drift rate mu of gas price
     mu = 0.1
     # volatility of the gas price
@@ -36,12 +36,12 @@ if __name__ == "__main__":
     # life of the power plant(in years)
     T_plant = 30
     # life of the option(in years)
-    T = 30
+    T = 2
     # time periods per year
     dt = 10
 
     # number of paths per simulations
-    paths = 5000
+    paths = 50000
 
     NPV = []
     OV = []
@@ -64,7 +64,37 @@ if __name__ == "__main__":
 
     # approximation of the threshold value
     thresholdvalue = (S_0[idx-1] + S_0[idx])/2
-    print(thresholdvalue)
+
+    #todo: store estimates or sth to make faster
+    #todo: bigger steps in the beginning
+    price_matrix = GBM(T, dt, paths, mu, sigma, thresholdvalue)
+    value = LSMC_RO(price_matrix, r, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, thresholdvalue)
+    npv = NPV1(thresholdvalue, A, Q, epsilon, O_M, r, Tc, I, T_plant)
+    print(thresholdvalue, value-npv, "initial estimate")
+    iteration = 0
+    while value -npv > 2000000:
+        iteration += 1
+        thresholdvalue -= 0.05
+        price_matrix = GBM(T, dt, paths, mu, sigma, thresholdvalue)
+        value = LSMC_RO(price_matrix, r, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, thresholdvalue)
+        npv = NPV1(thresholdvalue, A, Q, epsilon, O_M, r, Tc, I, T_plant)
+        print(thresholdvalue, value - npv, "iteration_step1", iteration)
+        if value - npv < 2000000:
+            while value - npv > 20000:
+                iteration +=1
+                thresholdvalue -= 0.01
+                price_matrix = GBM(T, dt, paths, mu, sigma, thresholdvalue)
+                value = LSMC_RO(price_matrix, r, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, thresholdvalue)
+                npv = NPV1(thresholdvalue, A, Q, epsilon, O_M, r, Tc, I, T_plant)
+                print(thresholdvalue, value - npv, "iteration_step2", iteration)
+                if value - npv < 10:
+                    while value - npv < 10:
+                        iteration +=1
+                        thresholdvalue += 0.001
+                        price_matrix = GBM(T, dt, paths, mu, sigma, thresholdvalue)
+                        value = LSMC_RO(price_matrix, r, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, thresholdvalue)
+                        npv = NPV1(thresholdvalue, A, Q, epsilon, O_M, r, Tc, I, T_plant)
+                        print(thresholdvalue, value - npv, "iteration_step3", iteration)
 
     plt.axvline(thresholdvalue, label="Threshold value",linestyle="--", c="r")
     plt.plot(S_0, NPV, label="NPV")
