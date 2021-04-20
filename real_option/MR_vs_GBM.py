@@ -8,22 +8,21 @@ dt = 150
 paths = 3
 N = T * dt
 
-theta = 0.2
-sigma = 0.3
-Sbar = 4.85  # long run equilibrium price
-S_0 = 3.2
-mu = 0.2
+S_0 = 4.43
 
-LR_0 = 100   # initial equilibrium price
-sigma_g = 0.2
-sigma_e = 0.05
-theta_e = 5
-theta_g = 0.2
+#GBM
+mu_GBM = 0.058
+sigma_GBM = 0.32073
 
-MR1 = MR1(T, dt, paths, sigma, S_0, theta, Sbar)
+# MR
+theta = 0.07
+Sbar = 5
+sigma_MR = 0.3
+
+MR1 = MR1(T, dt, paths, sigma_MR, S_0, theta, Sbar)
 # MR2 = MR2(T, dt, paths, sigma, S_0, theta, Sbar)
 # MR3 = MR3(T, dt, paths, sigma_g, sigma_e, S_0, theta_e, theta_g, Sbar, LR_0)
-GBM = GBM(T, dt, paths, mu, sigma, S_0)
+GBM = GBM(T, dt, paths, mu_GBM, sigma_GBM, S_0)
 
 plt.plot(np.linspace(0, N, N+1), MR1, label="MR1", c="r")
 # plt.plot(np.linspace(0, N, N+1), MR2, label="MR2", c="b")
