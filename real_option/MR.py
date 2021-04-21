@@ -17,13 +17,14 @@ def MR1(T, dt, paths, sigma, S_0, theta, Sbar):
 
     MR_matrix = np.zeros_like(wiener)
     MR_matrix[0] = S_0
+
     for i in range(1, N+1):
         dx = np.exp(theta * (Sbar - np.log(MR_matrix[i-1])) * dt + wiener[i])
         MR_matrix[i] = MR_matrix[i-1] * dx
 
     toc = time.time()
     elapsed_time = toc - tic
-    # print('Total running time of MR1: {:.2f} seconds'.format(elapsed_time))
+    print('Total running time of MR1: {:.2f} seconds'.format(elapsed_time))
 
     return MR_matrix
 
@@ -46,7 +47,7 @@ def MR2(T, dt, paths, sigma, S_0, theta, Sbar):
 
     toc = time.time()
     elapsed_time = toc - tic
-    # print('Total running time of MR1: {:.2f} seconds'.format(elapsed_time))
+    print('Total running time of MR2: {:.2f} seconds'.format(elapsed_time))
 
     return MR_matrix
 
