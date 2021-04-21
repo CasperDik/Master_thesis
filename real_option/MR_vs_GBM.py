@@ -8,7 +8,7 @@ dt = 150
 paths = 10000
 N = T * dt
 
-S_0 = 4.43
+S_0 = 8.591966814
 
 #GBM
 mu_GBM = 0.058
@@ -16,7 +16,7 @@ sigma_GBM = 0.32073
 
 # MR
 theta = 0.005618152
-Sbar = 4.488808368
+Sbar = 15.30463989
 sigma_MR = 0.171515663
 
 MR1 = MR1(T, dt, paths, sigma_MR, S_0, theta, Sbar)
