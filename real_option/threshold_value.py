@@ -10,6 +10,7 @@ def NPV1(price, A, Q, epsilon, O_M, r, Tc, I, T_plant):
 
 if __name__ == "__main__":
     from real_option.RO_LSMC import LSMC_RO, GBM
+
     # inputs
 
     # electricity price
@@ -28,22 +29,24 @@ if __name__ == "__main__":
     r = 0.056
 
     # initial gas price
-    S_0 = np.linspace(0.5,15,30)
-
+    #S_0 = 8.00
     # drift rate mu of gas price
-    mu = 0.1
+    mu = 0.0
     # volatility of the gas price
-    sigma = 0.15
+    sigma = 0.4
 
     # life of the power plant(in years)
     T_plant = 30
     # life of the option(in years)
-    T = 30
+    T = 1
     # time periods per year
-    dt = 80
+    dt = 10
 
     # number of paths per simulations
-    paths = 50000
+    paths = 10000
+
+    # initial gas price
+    S_0 = np.linspace(0.5,15,10)
 
     NPV = []
     OV = []

@@ -2,6 +2,8 @@ import numpy as np
 import time
 import warnings
 import pandas as pd
+import matplotlib.pyplot as plt
+from real_option.threshold_value import NPV1
 
 def GBM(T, dt, paths, mu, sigma, S_0):
     # start timer
@@ -26,7 +28,7 @@ def GBM(T, dt, paths, mu, sigma, S_0):
 
     return price_matrix
 
-def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, S_0):
+def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, S_0, n):
     # start timer
     tic = time.time()
 
@@ -46,8 +48,9 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I
     # 1 if in the money, otherwise 0
     execute = np.where(payoff_executing_RO(price_matrix, A, Q, epsilon, O_M, wacc, Tc, I, T_plant, S_0) > 0, 1, 0)
     # execute = np.ones_like(execute)       # use to convert to consider all paths
+    df = pd.DataFrame(columns=["alpha", "B1", "B2", "C*_+", "C*_-"])
 
-    for t in range(1, N+1):
+    for t in range(1, N):
         # discounted cf 1 time period
         discounted_cf = cf_matrix[N - t + 1] * np.exp(-r)
 
@@ -71,6 +74,15 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I
             cont_value = np.zeros_like(Y1)
             cont_value = np.polyval(regression, X1)
 
+            DF = (1-(1+wacc)**(-T_plant))/wacc
+            a = regression[0]
+            b = regression[1] + epsilon * Q * (1-Tc) * DF
+            c = regression[2] - (A * Q - O_M) * (1 - Tc) * DF + I
+
+            thresholdvalue_plus = (-b + np.sqrt(b**2 - 4 * a * c)) / (2 * a)
+            thresholdvalue_minus = (-b - np.sqrt(b ** 2 - 4 * a * c)) / (2 * a)
+            df.loc[t-1] = [regression[2], regression[1], regression[0], thresholdvalue_plus, thresholdvalue_minus]
+
             # update cash flow matrix
             imm_ex = payoff_executing_RO(X1, A, Q, epsilon, O_M, wacc, Tc, I, T_plant, S_0)
             cf_matrix[N - t] = np.ma.where(imm_ex > cont_value, imm_ex, cf_matrix[N - t + 1] * np.exp(-r))
@@ -79,6 +91,7 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I
             cf_matrix[N - t] = cf_matrix[N - t + 1] * np.exp(-r)
 
     # obtain option value
+    cf_matrix[0] = cf_matrix[1] * np.exp(-r)
     option_value = np.sum(cf_matrix[0])/ (paths*2)
 
     # st dev
@@ -90,6 +103,21 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I
     print('Total running time of LSMC: {:.2f} seconds'.format(elapsed_time), "\n")
     print("Value of this option is:", option_value)
     print("St dev of this option is:", st_dev, "\n")
+
+    if n == 1:
+        xra = np.linspace(2, 19, 20)
+        npvvv = NPV1(xra, A, Q, epsilon, O_M, wacc, Tc, I, T_plant)
+        cont_func = regression[2] + regression[1] * xra + regression[0] * xra ** 2
+        plt.plot(xra, npvvv)
+        plt.plot(xra, cont_func)
+        plt.axvline(thresholdvalue_plus, label="Threshold value", linestyle="--", c="r")
+        plt.show()
+
+        price_matrix1 = GBM(T, dt, paths, mu, sigma, thresholdvalue_plus)
+        print(thresholdvalue_plus, "threshold",
+              LSMC_RO(price_matrix1, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, thresholdvalue_plus, 0) -
+              NPV1(thresholdvalue_plus, A, Q, epsilon, O_M, wacc, Tc, I, T_plant))
+        print(thresholdvalue_minus)
 
     return option_value
 
@@ -124,17 +152,17 @@ if __name__ == "__main__":
     # drift rate mu of gas price
     mu = 0.0
     # volatility of the gas price
-    sigma = 0.4
+    sigma = 0.2
 
     # life of the power plant(in years)
     T_plant = 30
     # life of the option(in years)
-    T = 1
+    T = 30
     # time periods per year
     dt = 10
 
     # number of paths per simulations
-    paths = 10000
+    paths = 100000
 
     price_matrix = GBM(T, dt, paths, mu, sigma, S_0)
-    value = LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, S_0)
+    value = LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, S_0, 1)
