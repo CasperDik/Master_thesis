@@ -73,15 +73,13 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I
             # calculate continuation value
             cont_value = np.zeros_like(Y1)
             cont_value = np.polyval(regression, X1)
+            if t > N-2:
+                DF = (1-(1+wacc)**(-T_plant))/wacc
+                a = regression[0]
+                b = regression[1] + epsilon * Q * (1-Tc) * DF
+                c = regression[2] - (A * Q - O_M) * (1 - Tc) * DF + I
 
-            DF = (1-(1+wacc)**(-T_plant))/wacc
-            a = regression[0]
-            b = regression[1] + epsilon * Q * (1-Tc) * DF
-            c = regression[2] - (A * Q - O_M) * (1 - Tc) * DF + I
-
-            thresholdvalue_plus = (-b + np.sqrt(b**2 - 4 * a * c)) / (2 * a)
-            thresholdvalue_minus = (-b - np.sqrt(b ** 2 - 4 * a * c)) / (2 * a)
-            # df.loc[t-1] = [regression[2], regression[1], regression[0], thresholdvalue_plus, thresholdvalue_minus]
+                threshold = max(np.roots([a, b, c]))
 
             # update cash flow matrix
             imm_ex = payoff_executing_RO(X1, A, Q, epsilon, O_M, wacc, Tc, I, T_plant, S_0)
@@ -101,7 +99,7 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I
     toc = time.time()
     elapsed_time = toc - tic
     print('Total running time of LSMC: {:.2f} seconds'.format(elapsed_time), "\n")
-    print("Value of this option is:", option_value, "with a critical gas price of: ", thresholdvalue_plus)
+    print("Value of this option is:", option_value, "with a critical gas price of: ", threshold)
     print("St dev of this option is:", st_dev, "\n")
 
     """
@@ -120,7 +118,7 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I
               NPV1(thresholdvalue_plus, A, Q, epsilon, O_M, wacc, Tc, I, T_plant))
         
     """
-    return option_value, thresholdvalue_plus
+    return option_value, threshold
 
 
 def payoff_executing_RO(price, A, Q, epsilon, O_M, wacc, Tc, I, T_plant, S_0):
@@ -158,12 +156,12 @@ if __name__ == "__main__":
     # life of the power plant(in years)
     T_plant = 30
     # life of the option(in years)
-    T = 30
+    T = 6
     # time periods per year
     dt = 10
 
     # number of paths per simulations
-    paths = 100000
+    paths = 10000
 
     price_matrix = GBM(T, dt, paths, mu, sigma, S_0)
     value = LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, S_0, 1)

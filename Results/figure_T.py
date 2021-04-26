@@ -30,9 +30,9 @@ if __name__ == "__main__":
     sigma_mr = 0.15289
 
     # life of the option(in years)
-    T = np.linspace(1,30,20)
+    T = np.linspace(1,30,10)
     # time periods per year
-    dt = 10
+    dt = 40
     # number of paths per simulations
     paths = 100000
 
@@ -42,15 +42,32 @@ if __name__ == "__main__":
     MR_tp = []
 
     for t in T:
+        print("ran with maturity ", t, "\n")
+
         # GBM
-        price_matrix_gbm = GBM(t, dt, paths, mu, sigma_gbm, S_0)
-        value_gbm, tp_gbm = LSMC_RO(price_matrix_gbm, wacc, paths, t, T_plant, dt, A, Q, epsilon, O_M, Tc, I, S_0, 1)
-        GBM_v.append(value_gbm)
-        GBM_tp.append(tp_gbm)
+        val = []
+        tp = []
+        for _ in range(5):
+            price_matrix_gbm = GBM(t, dt, paths, mu, sigma_gbm, S_0)
+            value_gbm, tp_gbm = LSMC_RO(price_matrix_gbm, wacc, paths, t, T_plant, dt, A, Q, epsilon, O_M, Tc, I, S_0, 1)
+            val.append(value_gbm)
+            tp.append(tp_gbm)
+        val = np.mean(val)
+        tp = np.mean(tp)
+        GBM_v.append(val)
+        GBM_tp.append(tp)
 
         # MR
-        price_matrix_mr = MR2(t, dt, paths, sigma_mr, S_0, theta, Sbar)
-        value_mr, tp_mr = LSMC_RO(price_matrix_mr, wacc, paths, t, T_plant, dt, A, Q, epsilon, O_M, Tc, I, S_0, 1)
+        val = []
+        tp = []
+        for _ in range(5):
+            price_matrix_mr = MR2(t, dt, paths, sigma_mr, S_0, theta, Sbar)
+            value_mr, tp_mr = LSMC_RO(price_matrix_mr, wacc, paths, t, T_plant, dt, A, Q, epsilon, O_M, Tc, I, S_0, 1)
+            val.append(value_mr)
+            tp.append(tp_mr)
+
+        val = np.mean(val)
+        tp = np.mean(tp)
         MR_v.append(value_mr)
         MR_tp.append(tp_mr)
 
@@ -60,4 +77,4 @@ df["value GBM"] = GBM_v
 df["TP GBM"] = GBM_tp
 df["value MR"] = MR_v
 df["TP MR"] = MR_tp
-df.to_excel("time to maturity data")
+df.to_excel("time_to_maturity_data.xlsx")
