@@ -90,7 +90,7 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I
 
     # obtain option value
     cf_matrix[0] = cf_matrix[1] * np.exp(-r)
-    option_value = np.sum(cf_matrix[0])/ (paths*2)
+    option_value = np.sum(cf_matrix[0]) / (paths*2)
 
     # st dev
     st_dev = np.std(cf_matrix[0])/np.sqrt(paths)
