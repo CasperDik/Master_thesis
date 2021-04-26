@@ -48,7 +48,7 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I
     # 1 if in the money, otherwise 0
     execute = np.where(payoff_executing_RO(price_matrix, A, Q, epsilon, O_M, wacc, Tc, I, T_plant, S_0) > 0, 1, 0)
     # execute = np.ones_like(execute)       # use to convert to consider all paths
-    df = pd.DataFrame(columns=["alpha", "B1", "B2", "C*_+", "C*_-"])
+    # df = pd.DataFrame(columns=["alpha", "B1", "B2", "C*_+", "C*_-"])
 
     for t in range(1, N):
         # discounted cf 1 time period
@@ -81,7 +81,7 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I
 
             thresholdvalue_plus = (-b + np.sqrt(b**2 - 4 * a * c)) / (2 * a)
             thresholdvalue_minus = (-b - np.sqrt(b ** 2 - 4 * a * c)) / (2 * a)
-            df.loc[t-1] = [regression[2], regression[1], regression[0], thresholdvalue_plus, thresholdvalue_minus]
+            # df.loc[t-1] = [regression[2], regression[1], regression[0], thresholdvalue_plus, thresholdvalue_minus]
 
             # update cash flow matrix
             imm_ex = payoff_executing_RO(X1, A, Q, epsilon, O_M, wacc, Tc, I, T_plant, S_0)
@@ -101,9 +101,10 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I
     toc = time.time()
     elapsed_time = toc - tic
     print('Total running time of LSMC: {:.2f} seconds'.format(elapsed_time), "\n")
-    print("Value of this option is:", option_value)
+    print("Value of this option is:", option_value, "with a critical gas price of: ", thresholdvalue_plus)
     print("St dev of this option is:", st_dev, "\n")
 
+    """
     if n == 1:
         xra = np.linspace(2, 19, 20)
         npvvv = NPV1(xra, A, Q, epsilon, O_M, wacc, Tc, I, T_plant)
@@ -117,9 +118,9 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I
         print(thresholdvalue_plus, "threshold",
               LSMC_RO(price_matrix1, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, thresholdvalue_plus, 0) -
               NPV1(thresholdvalue_plus, A, Q, epsilon, O_M, wacc, Tc, I, T_plant))
-        print(thresholdvalue_minus)
-
-    return option_value
+        
+    """
+    return option_value, thresholdvalue_plus
 
 
 def payoff_executing_RO(price, A, Q, epsilon, O_M, wacc, Tc, I, T_plant, S_0):
