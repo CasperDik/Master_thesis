@@ -3,7 +3,7 @@ import time
 import warnings
 import pandas as pd
 import matplotlib.pyplot as plt
-from real_option.threshold_value import NPV1
+from Real_Option.threshold_value import NPV1
 
 def GBM(T, dt, paths, mu, sigma, S_0):
     # start timer

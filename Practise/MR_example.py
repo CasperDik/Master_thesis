@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from real_option.MR import MR1
+from Real_Option.MR import MR1
 
 
 """

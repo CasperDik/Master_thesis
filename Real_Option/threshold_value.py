@@ -9,7 +9,7 @@ def NPV1(price, A, Q, epsilon, O_M, r, Tc, I, T_plant):
     return Payoff
 
 if __name__ == "__main__":
-    from real_option.RO_LSMC import LSMC_RO, GBM
+    from Real_Option.RO_LSMC import LSMC_RO, GBM
 
     # inputs
 

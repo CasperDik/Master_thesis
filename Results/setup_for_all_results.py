@@ -1,5 +1,5 @@
-from real_option.RO_LSMC import LSMC_RO, GBM
-from real_option.MR import MR2
+from Real_Option.RO_LSMC import LSMC_RO, GBM
+from Real_Option.MR import MR2
 
 if __name__ == "__main__":
     # inputs:
