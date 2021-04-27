@@ -85,12 +85,16 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I
             imm_ex = payoff_executing_RO(X1, A, Q, epsilon, O_M, wacc, Tc, I, T_plant, S_0)
             cf_matrix[N - t] = np.ma.where(imm_ex > cont_value, imm_ex, cf_matrix[N - t + 1] * np.exp(-r))
             cf_matrix[N - t + 1:] = np.ma.where(imm_ex > cont_value, 0, cf_matrix[N - t + 1:])
+
         else:
             cf_matrix[N - t] = cf_matrix[N - t + 1] * np.exp(-r)
 
     # obtain option value
     cf_matrix[0] = cf_matrix[1] * np.exp(-r)
     option_value = np.sum(cf_matrix[0]) / (paths*2)
+
+    pinv = np.where(price_matrix > threshold, 1, 0)
+    prob_investing = pinv.sum() / (2 * paths * N)
 
     # st dev
     st_dev = np.std(cf_matrix[0])/np.sqrt(paths)
@@ -101,6 +105,7 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I
     print('Total running time of LSMC: {:.2f} seconds'.format(elapsed_time), "\n")
     print("Value of this option is:", option_value, "with a critical gas price of: ", threshold)
     print("St dev of this option is:", st_dev, "\n")
+    print("Probability of investing", prob_investing)
 
     """
     if n == 1:
@@ -156,9 +161,9 @@ if __name__ == "__main__":
     # life of the power plant(in years)
     T_plant = 30
     # life of the option(in years)
-    T = 6
+    T = 15
     # time periods per year
-    dt = 10
+    dt = 20
 
     # number of paths per simulations
     paths = 10000

@@ -30,11 +30,11 @@ if __name__ == "__main__":
     sigma_mr = 0.15289
 
     # life of the option(in years)
-    T = np.linspace(1,30,10)
+    T = [0.2, 0.5, 0.7, 1, 1.5, 2, 2.5, 3, 4, 5, 7, 9, 11, 14, 18, 22, 25, 28, 30]
     # time periods per year
-    dt = 40
+    dt = 50
     # number of paths per simulations
-    paths = 100000
+    paths = 1000
 
     GBM_v = []
     MR_v = []
@@ -58,6 +58,7 @@ if __name__ == "__main__":
         GBM_tp.append(tp)
 
         # MR
+        # todo: probability of investing
         val = []
         tp = []
         for _ in range(5):
@@ -71,8 +72,9 @@ if __name__ == "__main__":
         MR_v.append(value_mr)
         MR_tp.append(tp_mr)
 
-df = pd.DataFrame(columns=["value GBM", "TP GBM", "value MR", "TP MR"])
+df = pd.DataFrame(columns=["Time", "value GBM", "TP GBM", "value MR", "TP MR"])
 
+df["Time"] = T
 df["value GBM"] = GBM_v
 df["TP GBM"] = GBM_tp
 df["value MR"] = MR_v

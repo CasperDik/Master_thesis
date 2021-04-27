@@ -3,27 +3,29 @@ from Real_Option.MR import MR2, MR1, MR3
 import matplotlib.pyplot as plt
 import numpy as np
 
-T = 10
-dt = 150
-paths = 10
+T =  30
+dt = 50
+paths = 10000
 N = T * dt
 
-S_0 = 8.591966814
+S_0 = 8.00
 
 #GBM
-mu_GBM = 0.058
-sigma_GBM = 0.32073
+mu_GBM = 0.05743
+sigma_GBM = 0.32048
 
 # MR
-theta = 0.005618152
-Sbar = 15.30463989
-sigma_MR = 0.171515663
+theta = 0.044
+Sbar = 9.801
+sigma_MR = 0.15289
 
 #MR1 = MR1(T, dt, paths, sigma_MR, S_0, theta, Sbar)
 MR2 = MR2(T, dt, paths, sigma_MR, S_0, theta, Sbar)
 GBM = GBM(T, dt, paths, mu_GBM, sigma_GBM, S_0)
 # MR3 = MR3(T, dt, paths, sigma_g, sigma_e, S_0, theta_e, theta_g, Sbar, LR_0)
 
+print(np.mean(GBM[T*dt]))
+print(np.mean(MR2[T*dt]))
 #plt.plot(np.linspace(0, N, N+1), MR1, label="MR1", c="y", alpha=0.2)
 plt.plot(np.linspace(0, N, N+1), MR2, label="MR2", c="b", alpha=0.2)
 plt.plot(np.linspace(0, N+1, N+1), GBM, label="GBM", c="r", alpha=0.1)
