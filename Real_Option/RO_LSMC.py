@@ -104,8 +104,9 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I
     elapsed_time = toc - tic
     print('Total running time of LSMC: {:.2f} seconds'.format(elapsed_time), "\n")
     print("Value of this option is:", option_value, "with a critical gas price of: ", threshold)
-    print("St dev of this option is:", st_dev, "\n")
     print("Probability of investing", prob_investing)
+    print("St dev of this option is:", st_dev, "\n")
+
 
     """
     if n == 1:
@@ -123,7 +124,7 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I
               NPV1(thresholdvalue_plus, A, Q, epsilon, O_M, wacc, Tc, I, T_plant))
         
     """
-    return option_value, threshold
+    return option_value, threshold, prob_investing
 
 
 def payoff_executing_RO(price, A, Q, epsilon, O_M, wacc, Tc, I, T_plant, S_0):
