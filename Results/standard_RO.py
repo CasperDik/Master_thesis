@@ -1,4 +1,6 @@
 import numpy as np
+import pandas as pd
+
 from Real_Option.RO_LSMC import LSMC_RO, GBM
 from Real_Option.MR import MR2
 from Real_Option.threshold_value import NPV1, thresholdvalue
@@ -45,5 +47,9 @@ def standard_RO(paths, dt, T, OutOfMoney):
     threshold_MR = thresholdvalue(MR_v, NPV, S_0)
     print("thresholdprice GBM: ", threshold_GBM, "thresholdprice MR: ", threshold_MR)
 
-    return threshold_GBM, threshold_MR
-# todo: return input dataframe
+    inputs = pd.DataFrame({"_": ["A", "Q", "Epsilon", "O&M", "I", "Tc", "wacc", "Tplant", "S0", "mu", "sigmaGBM",
+                                 "Sbar", "theta", "sigmaMR", "dt", "paths", "T"],
+                           "Inputs": [A, Q, epsilon, O_M, I, Tc, wacc, T_plant, S_0, mu, sigma_gbm, Sbar, theta,
+                                      sigma_mr, dt, paths, T]})
+
+    return threshold_GBM, threshold_MR, inputs
