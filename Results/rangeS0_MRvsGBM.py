@@ -7,7 +7,6 @@ from Real_Option.threshold_value import NPV1, thresholdvalue
 
 if __name__ == "__main__":
     # inputs:
-
     # real option setting
     A = 30.00
     Q = 4993200
@@ -31,9 +30,9 @@ if __name__ == "__main__":
     sigma_mr = 0.15289
 
     # life of the option(in years)
-    T = 2
+    T = 25
     # time periods per year
-    dt = 10
+    dt = 50
     # number of paths per simulations
     paths = 25000
 

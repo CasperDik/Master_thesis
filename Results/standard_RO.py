@@ -1,0 +1,49 @@
+import numpy as np
+from Real_Option.RO_LSMC import LSMC_RO, GBM
+from Real_Option.MR import MR2
+from Real_Option.threshold_value import NPV1, thresholdvalue
+
+def standard_RO(paths, dt, T, OutOfMoney):
+    # inputs:
+    # real option setting
+    A = 30.00
+    Q = 4993200
+    epsilon = 1/0.5
+    O_M = 25*600*1000
+    I = 850*1000*600 - OutOfMoney
+    Tc = 0.21
+    wacc = 0.056
+    T_plant = 30
+
+    # initial gas price
+    S_0 = np.linspace(4, 12, 40)
+
+    # GBM
+    mu = 0.05743
+    sigma_gbm = 0.32048
+
+    # MR
+    Sbar = 9.801
+    theta = 0.044
+    sigma_mr = 0.15289
+
+    GBM_v = []
+    MR_v = []
+    NPV = []
+
+    for s in S_0:
+        # GBM
+        price_matrix_gbm = GBM(T, dt, paths, mu, sigma_gbm, s)
+        GBM_v.append(LSMC_RO(price_matrix_gbm, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I))
+
+        # MR
+        price_matrix_mr = MR2(T, dt, paths, sigma_mr, s, theta, Sbar)
+        MR_v.append(LSMC_RO(price_matrix_mr, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I))
+
+        NPV.append(NPV1(s, A, Q, epsilon, O_M, wacc, Tc, I, T_plant))
+    threshold_GBM = thresholdvalue(GBM_v, NPV, S_0)
+    threshold_MR = thresholdvalue(MR_v, NPV, S_0)
+    print("thresholdprice GBM: ", threshold_GBM, "thresholdprice MR: ", threshold_MR)
+
+    return threshold_GBM, threshold_MR
+# todo: return input dataframe
