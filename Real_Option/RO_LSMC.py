@@ -1,9 +1,7 @@
 import numpy as np
 import time
 import warnings
-import pandas as pd
-import matplotlib.pyplot as plt
-from Real_Option.threshold_value import NPV1
+
 
 def GBM(T, dt, paths, mu, sigma, S_0):
     # start timer
@@ -28,7 +26,7 @@ def GBM(T, dt, paths, mu, sigma, S_0):
 
     return price_matrix
 
-def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, S_0, n):
+def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I):
     # start timer
     tic = time.time()
 
@@ -43,14 +41,13 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I
     cf_matrix = np.zeros((N + 1, paths*2))
 
     # calculated cf when executed in time T (cfs European option)
-    cf_matrix[N] = payoff_executing_RO(price_matrix[N], A, Q, epsilon, O_M, wacc, Tc, I, T_plant, S_0)
+    cf_matrix[N] = payoff_executing_RO(price_matrix[N], A, Q, epsilon, O_M, wacc, Tc, I, T_plant)
 
     # 1 if in the money, otherwise 0
-    execute = np.where(payoff_executing_RO(price_matrix, A, Q, epsilon, O_M, wacc, Tc, I, T_plant, S_0) > 0, 1, 0)
+    execute = np.where(payoff_executing_RO(price_matrix, A, Q, epsilon, O_M, wacc, Tc, I, T_plant) > 0, 1, 0)
     # execute = np.ones_like(execute)       # use to convert to consider all paths
-    # df = pd.DataFrame(columns=["alpha", "B1", "B2", "C*_+", "C*_-"])
 
-    for t in range(1, N):
+    for t in range(1, N+1):
         # discounted cf 1 time period
         discounted_cf = cf_matrix[N - t + 1] * np.exp(-r)
 
@@ -73,28 +70,18 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I
             # calculate continuation value
             cont_value = np.zeros_like(Y1)
             cont_value = np.polyval(regression, X1)
-            if t > N-2:
-                DF = (1-(1+wacc)**(-T_plant))/wacc
-                a = regression[0]
-                b = regression[1] + epsilon * Q * (1-Tc) * DF
-                c = regression[2] - (A * Q - O_M) * (1 - Tc) * DF + I
-
-                threshold = max(np.roots([a, b, c]))
 
             # update cash flow matrix
-            imm_ex = payoff_executing_RO(X1, A, Q, epsilon, O_M, wacc, Tc, I, T_plant, S_0)
+            imm_ex = payoff_executing_RO(X1, A, Q, epsilon, O_M, wacc, Tc, I, T_plant)
             cf_matrix[N - t] = np.ma.where(imm_ex > cont_value, imm_ex, cf_matrix[N - t + 1] * np.exp(-r))
             cf_matrix[N - t + 1:] = np.ma.where(imm_ex > cont_value, 0, cf_matrix[N - t + 1:])
 
         else:
+            # all out of the money
             cf_matrix[N - t] = cf_matrix[N - t + 1] * np.exp(-r)
 
     # obtain option value
-    cf_matrix[0] = cf_matrix[1] * np.exp(-r)
     option_value = np.sum(cf_matrix[0]) / (paths*2)
-
-    pinv = np.where(price_matrix > threshold, 1, 0)
-    prob_investing = pinv.sum() / (2 * paths * N)
 
     # st dev
     st_dev = np.std(cf_matrix[0])/np.sqrt(paths)
@@ -103,31 +90,13 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I
     toc = time.time()
     elapsed_time = toc - tic
     print('Total running time of LSMC: {:.2f} seconds'.format(elapsed_time), "\n")
-    print("Value of this option is:", option_value, "with a critical gas price of: ", threshold)
-    print("Probability of investing", prob_investing)
+    print("Value of this option is:", option_value)
     print("St dev of this option is:", st_dev, "\n")
 
-
-    """
-    if n == 1:
-        xra = np.linspace(2, 19, 20)
-        npvvv = NPV1(xra, A, Q, epsilon, O_M, wacc, Tc, I, T_plant)
-        cont_func = regression[2] + regression[1] * xra + regression[0] * xra ** 2
-        plt.plot(xra, npvvv)
-        plt.plot(xra, cont_func)
-        plt.axvline(thresholdvalue_plus, label="Threshold value", linestyle="--", c="r")
-        plt.show()
-
-        price_matrix1 = GBM(T, dt, paths, mu, sigma, thresholdvalue_plus)
-        print(thresholdvalue_plus, "threshold",
-              LSMC_RO(price_matrix1, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, thresholdvalue_plus, 0) -
-              NPV1(thresholdvalue_plus, A, Q, epsilon, O_M, wacc, Tc, I, T_plant))
-        
-    """
-    return option_value, threshold, prob_investing
+    return option_value
 
 
-def payoff_executing_RO(price, A, Q, epsilon, O_M, wacc, Tc, I, T_plant, S_0):
+def payoff_executing_RO(price, A, Q, epsilon, O_M, wacc, Tc, I, T_plant):
     # discount factor
     DF = (1-(1+wacc)**(-T_plant))/wacc
     Payoff = (((A - epsilon * price) * Q - O_M) * (1 - Tc) * DF) - I
@@ -170,4 +139,4 @@ if __name__ == "__main__":
     paths = 10000
 
     price_matrix = GBM(T, dt, paths, mu, sigma, S_0)
-    value = LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, S_0, 1)
+    value = LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I)

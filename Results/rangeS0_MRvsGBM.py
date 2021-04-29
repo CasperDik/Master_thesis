@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from Real_Option.RO_LSMC import LSMC_RO, GBM
 from Real_Option.MR import MR2
-from Real_Option.threshold_value import NPV1
+from Real_Option.threshold_value import NPV1, thresholdvalue
 
 if __name__ == "__main__":
     # inputs:
@@ -19,7 +19,7 @@ if __name__ == "__main__":
     T_plant = 30
 
     # initial gas price
-    S_0 = np.linspace(4, 12, 9)
+    S_0 = np.linspace(4, 12, 40)
 
     # GBM
     mu = 0.05743
@@ -31,82 +31,57 @@ if __name__ == "__main__":
     sigma_mr = 0.15289
 
     # life of the option(in years)
-    T = 5
+    T = 2
     # time periods per year
-    dt = 100
+    dt = 10
     # number of paths per simulations
     paths = 25000
 
     GBM_v = []
     MR_v = []
-    GBM_tp = []
-    MR_tp = []
-    GBM_pinv = []
-    MR_pinv = []
     NPV = []
 
     for s in S_0:
         print("ran with initial gas price ", s, "\n")
 
         # GBM
-        val = []
-        tp = []
-        pinv = []
-        for _ in range(5):
-            price_matrix_gbm = GBM(T, dt, paths, mu, sigma_gbm, s)
-            value_gbm, tp_gbm, prob = LSMC_RO(price_matrix_gbm, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, s, 1)
-            val.append(value_gbm)
-            tp.append(tp_gbm)
-            pinv.append(prob)
-        val = np.mean(val)
-        tp = np.mean(tp)
-        pinv = np.mean(prob)
-
-        GBM_v.append(val)
-        GBM_tp.append(tp)
-        GBM_pinv.append(pinv)
+        price_matrix_gbm = GBM(T, dt, paths, mu, sigma_gbm, s)
+        GBM_v.append(LSMC_RO(price_matrix_gbm, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I))
 
         # MR
-        val = []
-        tp = []
-        pinv = []
-        for _ in range(5):
-            price_matrix_mr = MR2(T, dt, paths, sigma_mr, s, theta, Sbar)
-            value_mr, tp_mr, prob = LSMC_RO(price_matrix_mr, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, s, 1)
-            val.append(value_mr)
-            tp.append(tp_mr)
-            pinv.append(prob)
-
-        val = np.mean(val)
-        tp = np.mean(tp)
-        pinv = np.mean(prob)
-
-        MR_v.append(value_mr)
-        MR_tp.append(tp_mr)
-        MR_pinv.append(pinv)
+        price_matrix_mr = MR2(T, dt, paths, sigma_mr, s, theta, Sbar)
+        MR_v.append(LSMC_RO(price_matrix_mr, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I))
 
         NPV.append(NPV1(s, A, Q, epsilon, O_M, wacc, Tc, I, T_plant))
+    threshold_GBM = thresholdvalue(GBM_v, NPV, S_0)
+    threshold_MR = thresholdvalue(MR_v, NPV, S_0)
+    print("thresholdprice GBM: ", threshold_GBM, "thresholdprice MR: ",  threshold_MR)
 
-df = pd.DataFrame(columns=["S_0", "value GBM", "TP GBM", "Prob GBM", "value MR", "TP MR", "Prob MR", "NPV"])
-inputs = pd.DataFrame({"_":["A","Q","Epsilon","O&M", "I", "Tc", "wacc", "Tplant", "S0", "mu", "sigmaGBM", "Sbar", "theta", "sigmaMR", "dt", "pahts", "T"],
-                 "Inputs": [A, Q, epsilon, O_M, I, Tc, wacc, T_plant, S_0, mu, sigma_gbm, Sbar, theta, sigma_mr, dt, paths, T]})
+    df = pd.DataFrame(columns=["S_0", "value GBM", "value MR", "NPV"])
+    inputs = pd.DataFrame({"_":["A","Q","Epsilon","O&M", "I", "Tc", "wacc", "Tplant", "S0", "mu", "sigmaGBM", "Sbar", "theta", "sigmaMR", "dt", "pahts", "T"],
+                     "Inputs": [A, Q, epsilon, O_M, I, Tc, wacc, T_plant, S_0, mu, sigma_gbm, Sbar, theta, sigma_mr, dt, paths, T]})
 
-df["S_0"] = S_0
-df["value GBM"] = GBM_v
-df["TP GBM"] = GBM_tp
-df["Prob GBM"] = GBM_pinv
-df["value MR"] = MR_v
-df["TP MR"] = MR_tp
-df["Prob MR"] = MR_pinv
-df["NPV"] = NPV
+    df["S_0"] = S_0
+    df["value GBM"] = GBM_v
+    df["value MR"] = MR_v
+    df["NPV"] = NPV
 
-writer = pd.ExcelWriter("raw_data/rangeS0.xlsx", engine="xlsxwriter")
-inputs.to_excel(writer, sheet_name="inputs")
-df.to_excel(writer, sheet_name="results")
-writer.save()
+    DF = (1-(1+wacc)**(-T_plant))/wacc
+    NPV0 = (A * Q - O_M)/(epsilon * Q) - I/((1 - Tc) * DF * epsilon * Q)
+    row = ["threshold prices: ", threshold_GBM, threshold_MR, NPV0]
+    df.loc[len(df)] = row
 
-plt.plot(S_0, NPV, label="NPV")
-plt.plot(S_0, GBM_v, label="GBM")
-plt.plot(S_0, MR_v, label="MR")
-#todo: add threshold line
-plt.show()
+    writer = pd.ExcelWriter("raw_data/rangeS0.xlsx", engine="xlsxwriter")
+    inputs.to_excel(writer, sheet_name="inputs")
+    df.to_excel(writer, sheet_name="results")
+    writer.save()
+
+    plt.plot(S_0, NPV, label="NPV")
+    plt.plot(S_0, GBM_v, label="GBM")
+    plt.plot(S_0, MR_v, label="MR")
+    plt.axvline(threshold_GBM, c="r", linestyle="--", label="critical gas price GBM", alpha=0.5, linewidth=0.3)
+    plt.axvline(threshold_MR, c="r", linestyle="--", label="critical gas price MR", alpha=0.5, linewidth=0.3)
+    plt.axhline(0, c="k", linestyle="--", linewidth=0.3)
+
+    plt.legend()
+    plt.show()

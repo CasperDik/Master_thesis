@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from Real_Option.RO_LSMC import LSMC_RO, GBM
 from Real_Option.MR import MR2
+from Real_Option.threshold_value import NPV1, thresholdvalue
 
 if __name__ == "__main__":
     # inputs:
@@ -37,63 +38,31 @@ if __name__ == "__main__":
 
     GBM_v = []
     MR_v = []
-    GBM_tp = []
-    MR_tp = []
-    GBM_pinv = []
-    MR_pinv = []
 
     for t in T:
         print("ran with maturity ", t, "\n")
 
         # GBM
-        val = []
-        tp = []
-        pinv = []
-        for _ in range(5):
-            price_matrix_gbm = GBM(t, dt, paths, mu, sigma_gbm, S_0)
-            value_gbm, tp_gbm, prob = LSMC_RO(price_matrix_gbm, wacc, paths, t, T_plant, dt, A, Q, epsilon, O_M, Tc, I, S_0, 1)
-            val.append(value_gbm)
-            tp.append(tp_gbm)
-            pinv.append(prob)
-        val = np.mean(val)
-        tp = np.mean(tp)
-        pinv = np.mean(prob)
-
-        GBM_v.append(val)
-        GBM_tp.append(tp)
-        GBM_pinv.append(pinv)
+        price_matrix_gbm = GBM(t, dt, paths, mu, sigma_gbm, S_0)
+        GBM_v.append(LSMC_RO(price_matrix_gbm, wacc, paths, t, T_plant, dt, A, Q, epsilon, O_M, Tc, I))
 
         # MR
-        val = []
-        tp = []
-        pinv = []
-        for _ in range(5):
-            price_matrix_mr = MR2(t, dt, paths, sigma_mr, S_0, theta, Sbar)
-            value_mr, tp_mr, prob = LSMC_RO(price_matrix_mr, wacc, paths, t, T_plant, dt, A, Q, epsilon, O_M, Tc, I, S_0, 1)
-            val.append(value_mr)
-            tp.append(tp_mr)
-            pinv.append(prob)
+        price_matrix_mr = MR2(t, dt, paths, sigma_mr, S_0, theta, Sbar)
+        MR_v.append(LSMC_RO(price_matrix_mr, wacc, paths, t, T_plant, dt, A, Q, epsilon, O_M, Tc, I))
+    NPV = NPV1(S_0, A, Q, epsilon, O_M, wacc, Tc, I, T_plant)
+    threshold_GBM = thresholdvalue(GBM_v, NPV)
+    threshold_MR = thresholdvalue(MR_v, NPV)
 
-        val = np.mean(val)
-        tp = np.mean(tp)
-        pinv = np.mean(prob)
-
-        MR_v.append(value_mr)
-        MR_tp.append(tp_mr)
-        MR_pinv.append(pinv)
-
-df = pd.DataFrame(columns=["Time", "value GBM", "TP GBM", "Prob GBM", "value MR", "TP MR", "Prob MR"])
+df = pd.DataFrame(columns=["Time", "value GBM",  "value MR"])
 inputs = pd.DataFrame({"_":["A","Q","Epsilon","O&M", "I", "Tc", "wacc", "Tplant", "S0", "mu", "sigmaGBM", "Sbar", "theta", "sigmaMR", "dt", "pahts", "T"],
                  "Inputs": [A, Q, epsilon, O_M, I, Tc, wacc, T_plant, S_0, mu, sigma_gbm, Sbar, theta, sigma_mr, dt, paths, T]})
 
 df["Time"] = T
 df["value GBM"] = GBM_v
-df["TP GBM"] = GBM_tp
-df["Prob GBM"] = GBM_pinv
 df["value MR"] = MR_v
-df["TP MR"] = MR_tp
-df["Prob MR"] = MR_pinv
-
+# todo: for threshold need a range of S_0 maybe import other
+# todo: add thresholds and NPV to dataframe
+# todo: plot graphs of thresholds and NPV
 
 writer = pd.ExcelWriter("raw_data/time_to_maturity.xlsx", engine="xlsxwriter")
 inputs.to_excel(writer, sheet_name="inputs")
