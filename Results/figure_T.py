@@ -33,7 +33,7 @@ if __name__ == "__main__":
     # time periods per year
     dt = 25
     # number of paths per simulations
-    paths = 40000
+    paths = 25000
 
     GBM_v = []
     MR_v = []
@@ -83,13 +83,20 @@ if __name__ == "__main__":
         MR_pinv.append(pinv)
 
 df = pd.DataFrame(columns=["Time", "value GBM", "TP GBM", "Prob GBM", "value MR", "TP MR", "Prob MR"])
+inputs = pd.DataFrame({"_":["A","Q","Epsilon","O&M", "I", "Tc", "wacc", "Tplant", "S0", "mu", "sigmaGBM", "Sbar", "theta", "sigmaMR", "dt", "pahts", "T"],
+                 "Inputs": [A, Q, epsilon, O_M, I, Tc, wacc, T_plant, S_0, mu, sigma_gbm, Sbar, theta, sigma_mr, dt, paths, T]})
 
 df["Time"] = T
 df["value GBM"] = GBM_v
 df["TP GBM"] = GBM_tp
+df["Prob GBM"] = GBM_pinv
 df["value MR"] = MR_v
 df["TP MR"] = MR_tp
-df["Prob GBM"] = GBM_pinv
 df["Prob MR"] = MR_pinv
 
-df.to_excel("time_to_maturity_data.xlsx")
+
+writer = pd.ExcelWriter("raw_data/time_to_maturity.xlsx", engine="xlsxwriter")
+inputs.to_excel(writer, sheet_name="inputs")
+df.to_excel(writer, sheet_name="results")
+writer.save()
+
