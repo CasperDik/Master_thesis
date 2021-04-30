@@ -5,14 +5,14 @@ from Real_Option.RO_LSMC import LSMC_RO, GBM
 from Real_Option.MR import MR2
 from Real_Option.threshold_value import NPV1, thresholdvalue
 
-def standard_RO(paths, dt, T, OutOfMoney):
+def standard_RO(paths, dt, T, s):
     # inputs:
     # real option setting
     A = 30.00
     Q = 4993200
     epsilon = 1/0.5
     O_M = 25*600*1000
-    I = 850*1000*600 - OutOfMoney
+    I = 850*1000*600
     Tc = 0.21
     wacc = 0.056
     T_plant = 30
@@ -22,12 +22,12 @@ def standard_RO(paths, dt, T, OutOfMoney):
 
     # GBM
     mu = 0.05743
-    sigma_gbm = 0.32048
+    sigma_gbm = 0.32048 * s
 
     # MR
     Sbar = 9.801
     theta = 0.044
-    sigma_mr = 0.15289
+    sigma_mr = 0.15289 * s
 
     GBM_v = []
     MR_v = []
