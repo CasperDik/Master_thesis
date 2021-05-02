@@ -4,13 +4,15 @@ import matplotlib.pyplot as plt
 
 T = 5
 paths = 25000
-dt = 25
+dt = 50
 
 TPGBM = []
 TPMR  = []
 sigma = [0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.3]
 
 for s in sigma:
+    print("ran with sigma * ", s, "\n")
+
     tpGBM, tpMR, inputs = standard_RO(paths, dt, T, s)
     TPGBM.append(tpGBM)
     TPMR.append(tpMR)

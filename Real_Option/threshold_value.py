@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def NPV1(price, A, Q, epsilon, O_M, r, Tc, I, T_plant):
     # discount factor
     DF = (1-(1+r)**(-T_plant))/r

@@ -53,3 +53,4 @@ def standard_RO(paths, dt, T, s):
                                       sigma_mr, dt, paths, T]})
 
     return threshold_GBM, threshold_MR, inputs
+

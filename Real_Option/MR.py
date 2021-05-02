@@ -28,7 +28,6 @@ def MR1(T, dt, paths, sigma, S_0, theta, Sbar):
 
     return MR_matrix
 
-
 def MR2(T, dt, paths, sigma, S_0, theta, Sbar):
     tic = time.time()
     N = T * dt

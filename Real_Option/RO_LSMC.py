@@ -2,10 +2,9 @@ import numpy as np
 import time
 import warnings
 
-
 def GBM(T, dt, paths, mu, sigma, S_0):
     # start timer
-    tic = time.time()
+    #tic = time.time()
     N = T * dt
     N = int(N)
     dt = 1 / dt
@@ -20,11 +19,12 @@ def GBM(T, dt, paths, mu, sigma, S_0):
     price_matrix = S_0 * price_matrix.cumprod(axis=0)
 
     # Time and print the elapsed time
-    toc = time.time()
-    elapsed_time = toc - tic
-    print('Total running time of GBM: {:.2f} seconds'.format(elapsed_time))
+    #toc = time.time()
+    #elapsed_time = toc - tic
+    #print('Total running time of GBM: {:.2f} seconds'.format(elapsed_time))
 
     return price_matrix
+
 
 def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I):
     # start timer

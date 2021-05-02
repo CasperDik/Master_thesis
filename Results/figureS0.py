@@ -19,6 +19,7 @@ if __name__ == "__main__":
 
     # initial gas price
     S_0 = np.linspace(4, 12, 40)
+    #S_0 = np.linspace(0.5, 4, 40)
 
     # GBM
     mu = 0.05743
@@ -70,7 +71,7 @@ if __name__ == "__main__":
     row = ["threshold prices: ", threshold_GBM, threshold_MR, NPV0]
     df.loc[len(df)] = row
 
-    writer = pd.ExcelWriter("raw_data/rangeS0.xlsx", engine="xlsxwriter")
+    writer = pd.ExcelWriter("raw_data/rangeS0_OOTM.xlsx", engine="xlsxwriter")
     inputs.to_excel(writer, sheet_name="inputs")
     df.to_excel(writer, sheet_name="results")
     writer.save()
