@@ -1,10 +1,11 @@
 import numpy as np
 import time
-import warnings
+from Appendix.FD_call_american import American_call_grid
+import pandas as pd
 
 def GBM(T, dt, paths, mu, sigma, S_0):
     # start timer
-    #tic = time.time()
+    tic = time.time()
     N = T * dt
     N = int(N)
     dt = 1 / dt
@@ -19,14 +20,28 @@ def GBM(T, dt, paths, mu, sigma, S_0):
     price_matrix = S_0 * price_matrix.cumprod(axis=0)
 
     # Time and print the elapsed time
-    #toc = time.time()
-    #elapsed_time = toc - tic
-    #print('Total running time of GBM: {:.2f} seconds'.format(elapsed_time))
+    toc = time.time()
+    elapsed_time = toc - tic
+    print('Total running time of GBM: {:.2f} seconds'.format(elapsed_time))
+
+    # plt.plot(np.linspace(0, N+1, N+1), price_matrix)
+    # plt.show()
 
     return price_matrix
 
 
-def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I):
+def payoff_executing(K, price, type):
+    if type == "put":
+        payoff_put = K - price
+        return payoff_put.clip(min=0)
+    elif type == "call":
+        payoff_call = price - K
+        return payoff_call.clip(min=0)
+    else:
+        print("Error, only put or call is possible")
+        raise SystemExit(0)
+
+def LSMC(price_matrix, K, r, paths, T, dt, type, degreepoly):
     # start timer
     tic = time.time()
 
@@ -35,19 +50,19 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I
     N = int(N)
 
     # adjust yearly discount factor
-    r = (1 + wacc) ** (1 / dt) - 1
+    r = (1 + r) ** (1 / dt) - 1
 
     # cash flow matrix
     cf_matrix = np.zeros((N + 1, paths*2))
 
     # calculated cf when executed in time T (cfs European option)
-    cf_matrix[N] = payoff_executing_RO(price_matrix[N], A, Q, epsilon, O_M, wacc, Tc, I, T_plant)
+    cf_matrix[N] = payoff_executing(K, price_matrix[N], type)
 
     # 1 if in the money, otherwise 0
-    execute = np.where(payoff_executing_RO(price_matrix, A, Q, epsilon, O_M, wacc, Tc, I, T_plant) > 0, 1, 0)
+    execute = np.where(payoff_executing(K, price_matrix, type) > 0, 1, 0)
     # execute = np.ones_like(execute)       # use to convert to consider all paths
 
-    for t in range(1, N):
+    for t in range(1, N+1):
         # discounted cf 1 time period
         discounted_cf = cf_matrix[N - t + 1] * np.exp(-r)
 
@@ -62,26 +77,22 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I
         X1 = np.ma.masked_less_equal(X, 0)
         Y1 = np.ma.masked_less_equal(Y, 0) - 1
 
-        # meaning all paths are out of the money, never optimal to exercise
-        if X1.count() > 0:
-            regression = np.ma.polyfit(X1, Y1, 2)
-            warnings.simplefilter('ignore', np.RankWarning)
+        if X1.count() > 0:      # meaning all paths are out of the money, thus never optimal to exercise
+            regression = np.ma.polyfit(X1, Y1, degreepoly)
+            # warnings.simplefilter('ignore', np.RankWarning)
 
             # calculate continuation value
             cont_value = np.zeros_like(Y1)
             cont_value = np.polyval(regression, X1)
 
             # update cash flow matrix
-            imm_ex = payoff_executing_RO(X1, A, Q, epsilon, O_M, wacc, Tc, I, T_plant)
+            imm_ex = payoff_executing(K, X1, type)
             cf_matrix[N - t] = np.ma.where(imm_ex > cont_value, imm_ex, cf_matrix[N - t + 1] * np.exp(-r))
             cf_matrix[N - t + 1:] = np.ma.where(imm_ex > cont_value, 0, cf_matrix[N - t + 1:])
-
         else:
-            # all out of the money
             cf_matrix[N - t] = cf_matrix[N - t + 1] * np.exp(-r)
 
     # obtain option value
-    cf_matrix[0] = cf_matrix[1] * np.exp(-r)
     option_value = np.sum(cf_matrix[0]) / (paths*2)
 
     # st dev
@@ -90,54 +101,41 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I
     # Time and print the elapsed time
     toc = time.time()
     elapsed_time = toc - tic
-    print('Total running time of LSMC: {:.2f} seconds'.format(elapsed_time), "\n")
-    print("Value of this option is:", option_value)
-    print("St dev of this option is:", st_dev, "\n")
+    print('Total running time of LSMC: {:.2f} seconds'.format(elapsed_time))
+    print("Ran this with T: ", T, " and dt: ", dt, "\n")
+
+    print("Value of this", type, "option is:", option_value)
+    print("St dev of this", type, "option is:", st_dev, "\n")
 
     return option_value
 
 
-def payoff_executing_RO(price, A, Q, epsilon, O_M, wacc, Tc, I, T_plant):
-    # discount factor
-    DF = (1-(1+wacc)**(-T_plant))/wacc
-    Payoff = (((A - epsilon * price) * Q - O_M) * (1 - Tc) * DF) - I
-    return Payoff.clip(min=0)
-
-
 if __name__ == "__main__":
-    # inputs
+    paths = 20000
+    # years
+    T = 2
+    # execute possibilities per year
+    dt = 50
 
-    # electricity price
-    A = 30.38
-    # Quantity per year
-    Q = 4993200
-    # efficiency rate of the plant
-    epsilon = 1/0.55
-    # maintenance and operating cost per year
-    O_M = 13200000
-    # initial investment
-    I = 487200000
-    # tax rate
-    Tc = 0.21
-    # discount rate (WACC?)
-    wacc = 0.056
-
-    # initial gas price
-    S_0 = 8.00
-    # drift rate mu of gas price
-    mu = 0.0
-    # volatility of the gas price
+    S_0 = 36
     sigma = 0.2
+    r = 0.06
+    q = 0.00
+    mu = r - q
 
-    # life of the power plant(in years)
-    T_plant = 30
-    # life of the option(in years)
-    T = 15
-    # time periods per year
-    dt = 20
+    degreepoly = [2, 3, 5, 10]
 
-    # number of paths per simulations
-    paths = 10000
-
-    price_matrix = GBM(T, dt, paths, mu, sigma, S_0)
-    value = LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I)
+    df = pd.DataFrame(columns=["N=2", "N=3", "N=5", "N=10", "FD"])
+    i = 0
+    for K in [32, 36, 40]:
+        for _ in range(5):
+            i += 1
+            val = []
+            price_matrix = GBM(T, dt, paths, mu, sigma, S_0)
+            for n in degreepoly:
+                value = LSMC(price_matrix, K, r, paths, T, dt, "call", n)
+                val.append(value)
+            stocks, call_prices = American_call_grid(S_0, T, r, sigma, q, dt, K)
+            val.append(call_prices[dt])
+            df.loc[i] = val
+    df.to_excel("higher_degree_poly.xlsx")

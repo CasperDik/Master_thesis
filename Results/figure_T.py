@@ -2,7 +2,7 @@ from Results.standard_RO import standard_RO
 import pandas as pd
 import matplotlib.pyplot as plt
 
-T = [0.5, 1, 1.5, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 21, 23, 25]
+T = [0.01, 0.1, 0.2, 0.3, 0.4, 0.5]
 paths = 25000
 dt = 50
 

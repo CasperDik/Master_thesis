@@ -1,9 +1,9 @@
 from LSMC.LSMC_faster import LSMC, GBM
-from Graphs.european_LSMC_vs_analytical import BSM
+from Appendix.european_LSMC_vs_analytical import BSM
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
-from Graphs.convergence_perpetual import LSMC1
+from Appendix.convergence_perpetual import LSMC1
 
 def plot_volatility_LSMC(S_0, K, T, dt, mu, rf, sigma, paths):
     LSMC_call = []

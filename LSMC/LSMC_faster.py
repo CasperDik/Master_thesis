@@ -1,7 +1,5 @@
 import numpy as np
 import time
-import matplotlib.pyplot as plt
-import pandas as pd
 import warnings
 
 
@@ -43,13 +41,6 @@ def payoff_executing(K, price, type):
         print("Error, only put or call is possible")
         raise SystemExit(0)
 
-def thresholdprice(B1, B2, alpha, K):
-    threshold_price_plus = ((1-B1)+np.sqrt((B1-1)**2 - 4 * B2 * (alpha+K)))/(2*B2)
-    threshold_price_minus = ((1 - B1) - np.sqrt((B1 - 1) ** 2 - 4 * B2 * (alpha + K))) / (2 * B2)
-    threshold_price = min(threshold_price_minus, threshold_price_plus)
-    print(threshold_price)
-    return threshold_price
-
 def LSMC(price_matrix, K, r, paths, T, dt, type):
     # start timer
     tic = time.time()
@@ -71,7 +62,7 @@ def LSMC(price_matrix, K, r, paths, T, dt, type):
     execute = np.where(payoff_executing(K, price_matrix, type) > 0, 1, 0)
     # execute = np.ones_like(execute)       # use to convert to consider all paths
 
-    for t in range(1, N+1):
+    for t in range(1, N):
         # discounted cf 1 time period
         discounted_cf = cf_matrix[N - t + 1] * np.exp(-r)
 
@@ -93,7 +84,6 @@ def LSMC(price_matrix, K, r, paths, T, dt, type):
             # calculate continuation value
             cont_value = np.zeros_like(Y1)
             cont_value = np.polyval(regression, X1)
-            # thresholdprice(regression[1], regression[0], regression[2], K)
 
             # update cash flow matrix
             imm_ex = payoff_executing(K, X1, type)
@@ -103,6 +93,7 @@ def LSMC(price_matrix, K, r, paths, T, dt, type):
             cf_matrix[N - t] = cf_matrix[N - t + 1] * np.exp(-r)
 
     # obtain option value
+    cf_matrix[0] = cf_matrix[1] * np.exp(-r)
     option_value = np.sum(cf_matrix[0]) / (paths*2)
 
     # st dev
@@ -131,11 +122,11 @@ if __name__ == "__main__":
     rf = 0.06
     """
 
-    paths = 10000
+    paths = 20000
     # years
-    T = 1
+    T = 2
     # execute possibilities per year
-    dt = 185
+    dt = 50
 
     K = 36
     S_0 = 36
@@ -145,4 +136,4 @@ if __name__ == "__main__":
     mu = r - q
 
     price_matrix = GBM(T, dt, paths, mu, sigma, S_0)
-    value = LSMC(price_matrix, K, r, paths, T, dt, "put")
+    value = LSMC(price_matrix, K, r, paths, T, dt, "call")

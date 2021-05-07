@@ -18,7 +18,7 @@ if __name__ == "__main__":
     T_plant = 30
 
     # initial gas price
-    S_0 = np.linspace(4, 12, 40)
+    S_0 = np.linspace(4.5, 5.5, 20)
     #S_0 = np.linspace(0.5, 4, 40)
 
     # GBM
@@ -57,6 +57,8 @@ if __name__ == "__main__":
     threshold_MR = thresholdvalue(MR_v, NPV, S_0)
     print("thresholdprice GBM: ", threshold_GBM, "thresholdprice MR: ",  threshold_MR)
 
+
+
     df = pd.DataFrame(columns=["S_0", "value GBM", "value MR", "NPV"])
     inputs = pd.DataFrame({"_":["A","Q","Epsilon","O&M", "I", "Tc", "wacc", "Tplant", "S0", "mu", "sigmaGBM", "Sbar", "theta", "sigmaMR", "dt", "pahts", "T"],
                      "Inputs": [A, Q, epsilon, O_M, I, Tc, wacc, T_plant, S_0, mu, sigma_gbm, Sbar, theta, sigma_mr, dt, paths, T]})
@@ -85,3 +87,4 @@ if __name__ == "__main__":
 
     plt.legend()
     plt.show()
+
