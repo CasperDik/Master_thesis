@@ -37,21 +37,24 @@ def LSMC_Laguerre(price_matrix, K, r, paths, T, dt, type, polydegree):
         Y = (discounted_cf+1) * execute[N - t, :]
 
         # mask all zero values(out of the money paths) and run regression
-        X1 = np.ma.masked_less_equal(X, 0)
-        Y1 = np.ma.masked_less_equal(Y, 0) - 1
+        #X1 = np.ma.masked_less_equal(X, 0)
+        #Y1 = np.ma.masked_less_equal(Y, 0) - 1
+        X1 = X[np.where(X > 0)]
+        Y1 = Y[np.where(X > 0)]
 
-        if X1.count() > 0:      # meaning all paths are out of the money, thus never optimal to exercise
+        if np.count_nonzero(X1) > 0:      # meaning all paths are out of the money, thus never optimal to exercise
             regression = lagfit(X1, Y1, polydegree)
             # warnings.simplefilter('ignore', np.RankWarning)
 
             # calculate continuation value
-            cont_value = np.zeros_like(Y1)
-            cont_value = lagval(X1, regression)
+            cont_value = np.zeros_like(X)
+            cont_value[np.where(X > 0)] = lagval(X1, regression)
 
             # update cash flow matrix
-            imm_ex = payoff_executing(K, X1, type)
-            cf_matrix[N - t] = np.ma.where(imm_ex > cont_value, imm_ex, cf_matrix[N - t + 1] * np.exp(-r))
-            cf_matrix[N - t + 1:] = np.ma.where(imm_ex > cont_value, 0, cf_matrix[N - t + 1:])
+            imm_ex = payoff_executing(K, X, type)
+            # works because for ootm --> imm_ex=0 + cont value =0(not true obviously) but condition works
+            cf_matrix[N - t] = np.where(imm_ex > cont_value, imm_ex, cf_matrix[N - t + 1] * np.exp(-r))
+            cf_matrix[N - t + 1:] = np.where(imm_ex > cont_value, 0, cf_matrix[N - t + 1:])
         else:
             cf_matrix[N - t] = cf_matrix[N - t + 1] * np.exp(-r)
 
@@ -108,21 +111,24 @@ def LSMC_Legendre(price_matrix, K, r, paths, T, dt, type, polydegree):
         Y = (discounted_cf+1) * execute[N - t, :]
 
         # mask all zero values(out of the money paths) and run regression
-        X1 = np.ma.masked_less_equal(X, 0)
-        Y1 = np.ma.masked_less_equal(Y, 0) - 1
+        #X1 = np.ma.masked_less_equal(X, 0)
+        #Y1 = np.ma.masked_less_equal(Y, 0) - 1
 
-        if X1.count() > 0:      # meaning all paths are out of the money, thus never optimal to exercise
+        X1 = X[np.where(X > 0)]
+        Y1 = Y[np.where(X > 0)]
+
+        if np.count_nonzero(X1) > 0:      # meaning all paths are out of the money, thus never optimal to exercise
             regression = legfit(X1, Y1, polydegree)
             # warnings.simplefilter('ignore', np.RankWarning)
 
             # calculate continuation value
-            cont_value = np.zeros_like(Y1)
-            cont_value = legval(X1, regression)
+            cont_value = np.zeros_like(X)
+            cont_value[np.where(X > 0)] = legval(X1, regression)
 
             # update cash flow matrix
-            imm_ex = payoff_executing(K, X1, type)
-            cf_matrix[N - t] = np.ma.where(imm_ex > cont_value, imm_ex, cf_matrix[N - t + 1] * np.exp(-r))
-            cf_matrix[N - t + 1:] = np.ma.where(imm_ex > cont_value, 0, cf_matrix[N - t + 1:])
+            imm_ex = payoff_executing(K, X, type)
+            cf_matrix[N - t] = np.where(imm_ex > cont_value, imm_ex, cf_matrix[N - t + 1] * np.exp(-r))
+            cf_matrix[N - t + 1:] = np.where(imm_ex > cont_value, 0, cf_matrix[N - t + 1:])
         else:
             cf_matrix[N - t] = cf_matrix[N - t + 1] * np.exp(-r)
 
@@ -179,21 +185,23 @@ def LSMC_Chebyshev(price_matrix, K, r, paths, T, dt, type, polydegree):
         Y = (discounted_cf+1) * execute[N - t, :]
 
         # mask all zero values(out of the money paths) and run regression
-        X1 = np.ma.masked_less_equal(X, 0)
-        Y1 = np.ma.masked_less_equal(Y, 0) - 1
+        #X1 = np.ma.masked_less_equal(X, 0)
+        #Y1 = np.ma.masked_less_equal(Y, 0) - 1
+        X1 = X[np.where(X > 0)]
+        Y1 = Y[np.where(X > 0)]
 
-        if X1.count() > 0:      # meaning all paths are out of the money, thus never optimal to exercise
+        if np.count_nonzero(X1) > 0:      # meaning all paths are out of the money, thus never optimal to exercise
             regression = chebfit(X1, Y1, polydegree)
             # warnings.simplefilter('ignore', np.RankWarning)
 
             # calculate continuation value
-            cont_value = np.zeros_like(Y1)
-            cont_value = chebval(X1, regression)
+            cont_value = np.zeros_like(X)
+            cont_value[np.where(X > 0)] = chebval(X1, regression)
 
             # update cash flow matrix
-            imm_ex = payoff_executing(K, X1, type)
-            cf_matrix[N - t] = np.ma.where(imm_ex > cont_value, imm_ex, cf_matrix[N - t + 1] * np.exp(-r))
-            cf_matrix[N - t + 1:] = np.ma.where(imm_ex > cont_value, 0, cf_matrix[N - t + 1:])
+            imm_ex = payoff_executing(K, X, type)
+            cf_matrix[N - t] = np.where(imm_ex > cont_value, imm_ex, cf_matrix[N - t + 1] * np.exp(-r))
+            cf_matrix[N - t + 1:] = np.where(imm_ex > cont_value, 0, cf_matrix[N - t + 1:])
         else:
             cf_matrix[N - t] = cf_matrix[N - t + 1] * np.exp(-r)
 
@@ -250,21 +258,23 @@ def LSMC_Hermite(price_matrix, K, r, paths, T, dt, type, polydegree):
         Y = (discounted_cf+1) * execute[N - t, :]
 
         # mask all zero values(out of the money paths) and run regression
-        X1 = np.ma.masked_less_equal(X, 0)
-        Y1 = np.ma.masked_less_equal(Y, 0) - 1
+        #X1 = np.ma.masked_less_equal(X, 0)
+        #Y1 = np.ma.masked_less_equal(Y, 0) - 1
+        X1 = X[np.where(X > 0)]
+        Y1 = Y[np.where(X > 0)]
 
-        if X1.count() > 0:      # meaning all paths are out of the money, thus never optimal to exercise
+        if np.count_nonzero(X1) > 0:      # meaning all paths are out of the money, thus never optimal to exercise
             regression = hermfit(X1, Y1, polydegree)
             # warnings.simplefilter('ignore', np.RankWarning)
 
             # calculate continuation value
-            cont_value = np.zeros_like(Y1)
-            cont_value = hermval(X1, regression)
+            cont_value = np.zeros_like(X)
+            cont_value[np.where(X > 0)] = hermval(X1, regression)
 
             # update cash flow matrix
-            imm_ex = payoff_executing(K, X1, type)
-            cf_matrix[N - t] = np.ma.where(imm_ex > cont_value, imm_ex, cf_matrix[N - t + 1] * np.exp(-r))
-            cf_matrix[N - t + 1:] = np.ma.where(imm_ex > cont_value, 0, cf_matrix[N - t + 1:])
+            imm_ex = payoff_executing(K, X, type)
+            cf_matrix[N - t] = np.where(imm_ex > cont_value, imm_ex, cf_matrix[N - t + 1] * np.exp(-r))
+            cf_matrix[N - t + 1:] = np.where(imm_ex > cont_value, 0, cf_matrix[N - t + 1:])
         else:
             cf_matrix[N - t] = cf_matrix[N - t + 1] * np.exp(-r)
 
