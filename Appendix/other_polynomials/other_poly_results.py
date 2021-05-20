@@ -4,7 +4,7 @@ from other_poly import LSMC_Hermite, LSMC_Legendre, LSMC_Chebyshev, LSMC_Laguerr
 import pandas as pd
 
 if __name__ == "__main__":
-    paths = 20000
+    paths = 200000
     # years
     T = 2
     # execute possibilities per year

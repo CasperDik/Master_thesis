@@ -3,6 +3,7 @@ import time
 import warnings
 
 def GBM(T, dt, paths, mu, sigma, S_0):
+    np.random.seed(0)
     # start timer
     #tic = time.time()
     N = T * dt
@@ -13,7 +14,6 @@ def GBM(T, dt, paths, mu, sigma, S_0):
     wiener = np.random.normal(0, np.sqrt(dt), size=(paths, N)).T
     wiener_antithetic = wiener / -1
     wiener = np.hstack((wiener, wiener_antithetic))
-
     price_matrix = np.exp((mu - sigma ** 2 / 2) * dt + sigma * wiener)
     price_matrix = np.vstack([np.ones(paths*2), price_matrix])
     price_matrix = S_0 * price_matrix.cumprod(axis=0)
@@ -26,7 +26,7 @@ def GBM(T, dt, paths, mu, sigma, S_0):
     return price_matrix
 
 
-def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I):
+def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, mu, theta, Cbar, process):
     # start timer
     tic = time.time()
 
@@ -41,10 +41,12 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I
     cf_matrix = np.zeros((N + 1, paths*2))
 
     # calculated cf when executed in time T (cfs European option)
-    cf_matrix[N] = payoff_executing_RO(price_matrix[N], A, Q, epsilon, O_M, wacc, Tc, I, T_plant)
+    cf_matrix[N] = payoff_executing_RO1(price_matrix[N], A, Q, epsilon, O_M, wacc, I, T_plant, mu, theta, Cbar, process)
+    #cf_matrix[N] = payoff_executing_RO(price_matrix[N], A, Q, epsilon, O_M, wacc, Tc, I, T_plant)
 
     # 1 if in the money, otherwise 0
-    execute = np.where(payoff_executing_RO(price_matrix, A, Q, epsilon, O_M, wacc, Tc, I, T_plant) > 0, 1, 0)
+    execute = np.where(payoff_executing_RO1(price_matrix, A, Q, epsilon, O_M, wacc, I, T_plant, mu, theta, Cbar, process) > 0, 1, 0)
+    #execute = np.where(payoff_executing_RO(price_matrix, A, Q, epsilon, O_M, wacc, Tc, I, T_plant) > 0, 1, 0)
     # execute = np.ones_like(execute)       # use to convert to consider all paths
 
     for t in range(1, N):
@@ -72,7 +74,8 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I
             cont_value = np.polyval(regression, X1)
 
             # update cash flow matrix
-            imm_ex = payoff_executing_RO(X1, A, Q, epsilon, O_M, wacc, Tc, I, T_plant)
+            imm_ex = payoff_executing_RO1(X1, A, Q, epsilon, O_M, wacc, I, T_plant, mu, theta, Cbar, process)
+            #imm_ex = payoff_executing_RO(X1, A, Q, epsilon, O_M, wacc, Tc, I, T_plant)
             cf_matrix[N - t] = np.ma.where(imm_ex > cont_value, imm_ex, cf_matrix[N - t + 1] * np.exp(-r))
             cf_matrix[N - t + 1:] = np.ma.where(imm_ex > cont_value, 0, cf_matrix[N - t + 1:])
 
@@ -97,6 +100,30 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I
     return option_value
 
 
+def payoff_executing_RO1(price, A, Q, epsilon, O_M, wacc, I, T_plant, mu, theta, Cbar, process):
+    if process == "GBM":
+        p1 = (A*Q - O_M) / wacc
+        p2 = ((A*Q - O_M) * np.exp(-wacc * T_plant)) / wacc
+        p3 = (epsilon * price * Q) / (wacc - mu)
+        p4 = ((epsilon * price * Q) * np.exp((mu - wacc) * T_plant)) / (wacc - mu)
+        payoff = p1 - p2 - p3 + p4 - I
+
+        return payoff.clip(min=0)
+
+    if process == "MR1":
+        p1 = (A * Q - O_M - epsilon * Cbar * Q) / wacc
+        p2 = ((A * Q - O_M - epsilon * Cbar * Q) * np.exp(-wacc * T_plant)) / wacc
+        p3 = (epsilon * Q * (price - Cbar)) / (-theta - wacc)
+        p4 = ((epsilon * Q * (price - Cbar)) * np.exp((-theta - wacc) * T_plant)) / (-theta - wacc)
+        payoff = p1 - p2 - p3 + p4 - I
+
+        return payoff.clip(min=0)
+
+    else:
+        print("Unknown stochastic process used")
+        raise SystemExit(0)
+
+
 def payoff_executing_RO(price, A, Q, epsilon, O_M, wacc, Tc, I, T_plant):
     # discount factor
     DF = (1-(1+wacc)**(-T_plant))/wacc
@@ -105,6 +132,7 @@ def payoff_executing_RO(price, A, Q, epsilon, O_M, wacc, Tc, I, T_plant):
 
 
 if __name__ == "__main__":
+    from MR import MR2
     # inputs
 
     # electricity price
@@ -112,13 +140,13 @@ if __name__ == "__main__":
     # Quantity per year
     Q = 4993200
     # efficiency rate of the plant
-    epsilon = 1/0.55
+    epsilon = 1/0.6
     # maintenance and operating cost per year
     O_M = 13200000
     # initial investment
     I = 487200000
     # tax rate
-    Tc = 0.21
+    Tc = 0.00
     # discount rate (WACC?)
     wacc = 0.056
 
@@ -132,12 +160,17 @@ if __name__ == "__main__":
     # life of the power plant(in years)
     T_plant = 30
     # life of the option(in years)
-    T = 15
+    T = 1
     # time periods per year
-    dt = 20
+    dt = 50
 
     # number of paths per simulations
-    paths = 10000
+    paths = 20000
 
+    Sbar = 8
+    theta = 0
+
+    #price_matrix = MR2(T, dt, paths, sigma, S_0, theta, Sbar)
     price_matrix = GBM(T, dt, paths, mu, sigma, S_0)
-    value = LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I)
+
+    value = LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, mu, theta, Sbar, process)

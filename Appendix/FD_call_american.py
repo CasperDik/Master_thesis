@@ -2,13 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def call_payoff(strike, S_array):
-    # create an array of strikes that is of the same size as the stock price array
-    # len() is a functions that measures how big some array is
-    length_of_S_array= len(S_array)
-    strike_array=strike*np.ones(length_of_S_array)
-    # now create an array of that same length (number of elements) that gives the
-    # payoff values for a call option
-    values=np.maximum(S_array-strike_array,0)
+    # changed it, nicer code like this
+    values = np.maximum(S_array-strike, 0)
     return values
 
 

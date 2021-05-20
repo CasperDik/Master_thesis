@@ -3,9 +3,10 @@ import pandas as pd
 
 from Real_Option.RO_LSMC import LSMC_RO, GBM
 from Real_Option.MR import MR2
-from Real_Option.threshold_value import NPV1, thresholdvalue
+from Real_Option.threshold_value import NPV1, thresholdvalue, NPV_TP
 
 def standard_RO(paths, dt, T, s):
+    # todo: check inputs
     # inputs:
     # real option setting
     A = 30.00
@@ -36,21 +37,26 @@ def standard_RO(paths, dt, T, s):
     for s in S_0:
         # GBM
         price_matrix_gbm = GBM(T, dt, paths, mu, sigma_gbm, s)
-        GBM_v.append(LSMC_RO(price_matrix_gbm, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I))
+        # GBM_v.append(LSMC_RO(price_matrix_gbm, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I))
+        GBM_v.append(LSMC_RO(price_matrix_gbm, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, mu, theta, Sbar, "GBM"))
 
         # MR
         price_matrix_mr = MR2(T, dt, paths, sigma_mr, s, theta, Sbar)
-        MR_v.append(LSMC_RO(price_matrix_mr, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I))
+        #MR_v.append(LSMC_RO(price_matrix_mr, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I))
+        MR_v.append(
+            LSMC_RO(price_matrix_mr, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, mu, theta, Sbar, "MR1"))
 
         NPV.append(NPV1(s, A, Q, epsilon, O_M, wacc, Tc, I, T_plant))
     threshold_GBM = thresholdvalue(GBM_v, NPV, S_0)
     threshold_MR = thresholdvalue(MR_v, NPV, S_0)
-    print("thresholdprice GBM: ", threshold_GBM, "thresholdprice MR: ", threshold_MR)
+    threshold_NPV = NPV_TP(A, Q, epsilon, O_M, wacc, I, T_plant)
+
+    print("thresholdprice GBM: ", threshold_GBM, "thresholdprice MR: ", threshold_MR, "thresholdpirce NPV: ", threshold_NPV)
 
     inputs = pd.DataFrame({"_": ["A", "Q", "Epsilon", "O&M", "I", "Tc", "wacc", "Tplant", "S0", "mu", "sigmaGBM",
                                  "Sbar", "theta", "sigmaMR", "dt", "paths", "T"],
                            "Inputs": [A, Q, epsilon, O_M, I, Tc, wacc, T_plant, S_0, mu, sigma_gbm, Sbar, theta,
                                       sigma_mr, dt, paths, T]})
 
-    return threshold_GBM, threshold_MR, inputs
+    return threshold_GBM, threshold_MR, threshold_NPV, inputs
 

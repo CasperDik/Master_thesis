@@ -111,23 +111,23 @@ def LSMC(price_matrix, K, r, paths, T, dt, type, degreepoly):
 
 
 if __name__ == "__main__":
-    paths = 20000
+    paths = 200000
     # years
     T = 2
     # execute possibilities per year
     dt = 50
 
-    S_0 = 36
     sigma = 0.2
     r = 0.06
     q = 0.00
     mu = r - q
+    K = 36
 
     degreepoly = [2, 3, 5, 10]
 
     df = pd.DataFrame(columns=["N=2", "N=3", "N=5", "N=10", "FD"])
     i = 0
-    for K in [32, 36, 40]:
+    for S_0 in [32, 36, 40]:
         for _ in range(5):
             i += 1
             val = []

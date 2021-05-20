@@ -4,31 +4,49 @@ import time
 
 # https://math.stackexchange.com/questions/1287634/implementing-ornstein-uhlenbeck-in-matlab
 
+def MRvsGBM(T, dt, paths, sigma, S_0, theta, Sbar, mu):
+    N = T * dt
+    N = int(N)
+    dt = 1 / dt
+
+    wiener = (sigma * np.random.normal(0, np.sqrt(dt), size=(paths, N + 1))).T
+
+    MR_matrix = np.zeros((N+2, paths))
+    MR_matrix[0] = S_0
+    for i in range(1, N + 2):
+        dx = np.exp(theta * (np.log(Sbar) - np.log(MR_matrix[i - 1])) * dt + wiener[i-1])
+        MR_matrix[i] = MR_matrix[i - 1] * dx
+
+    price_matrix = np.exp((mu) * dt + wiener)
+    price_matrix = np.vstack([np.ones(paths), price_matrix])
+    price_matrix = S_0 * price_matrix.cumprod(axis=0)
+
+    return price_matrix, MR_matrix
+
 def MR1(T, dt, paths, sigma, S_0, theta, Sbar):
-    Sbar = np.log(Sbar)
     tic = time.time()
     N = T * dt
     N = int(N)
     dt = 1 / dt
 
-    wiener = (sigma * np.random.normal(0, np.sqrt(dt), size=(paths, N+1))).T
+    wiener = (sigma * np.random.normal(0, np.sqrt(dt), size=(paths, N + 1))).T
     wiener_antithetic = wiener / -1
     wiener = np.hstack((wiener, wiener_antithetic))
 
     MR_matrix = np.zeros_like(wiener)
     MR_matrix[0] = S_0
-
-    for i in range(1, N+1):
-        dx = np.exp(theta * (Sbar - np.log(MR_matrix[i-1])) * dt + wiener[i])
-        MR_matrix[i] = MR_matrix[i-1] * dx
+    for i in range(1, N + 1):
+        dx = theta * (Sbar - MR_matrix[i - 1]) + wiener[i]
+        MR_matrix[i] = MR_matrix[i - 1] + dx
 
     toc = time.time()
     elapsed_time = toc - tic
-    print('Total running time of MR1: {:.2f} seconds'.format(elapsed_time))
+    print('Total running time of MR2: {:.2f} seconds'.format(elapsed_time))
 
     return MR_matrix
 
 def MR2(T, dt, paths, sigma, S_0, theta, Sbar):
+    np.random.seed(0)
     tic = time.time()
     N = T * dt
     N = int(N)

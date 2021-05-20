@@ -1,12 +1,15 @@
 import numpy as np
 
 
-def NPV1(price, A, Q, epsilon, O_M, r, Tc, I, T_plant):
-    # discount factor
-    DF = (1-(1+r)**(-T_plant))/r
-    Payoff = (((A - epsilon * price) * Q - O_M) * (1 - Tc) * DF) - I
+def NPV1(price, A, Q, epsilon, O_M, r, I, T_plant):
+    Payoff = ((A - epsilon * price) * Q - O_M) / r - (((A - epsilon * price) * Q - O_M) * np.exp(-r * T_plant)) / r - I
+
     return Payoff
 
+def NPV_TP(A, Q, epsilon, O_M, r, I, T_plant):
+    NPV_TP = (A * Q - O_M)/(epsilon * Q) - (I * r)/((1-np.exp(-r*T_plant))*epsilon*Q)
+
+    return NPV_TP
 
 def thresholdvalue(OV, NPV, S_0):
     insurance_value = (np.array(OV) - np.array(NPV))

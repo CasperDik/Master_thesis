@@ -3,9 +3,11 @@ import numpy as np
 import pandas as pd
 from Real_Option.RO_LSMC import LSMC_RO, GBM
 from Real_Option.MR import MR2
-from Real_Option.threshold_value import NPV1, thresholdvalue
+from Real_Option.threshold_value import NPV1, thresholdvalue, NPV_TP
 
 if __name__ == "__main__":
+    # todo: check inputs
+
     # inputs:
     # real option setting
     A = 30.00
@@ -46,11 +48,15 @@ if __name__ == "__main__":
 
         # GBM
         price_matrix_gbm = GBM(T, dt, paths, mu, sigma_gbm, s)
-        GBM_v.append(LSMC_RO(price_matrix_gbm, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I))
+        #GBM_v.append(LSMC_RO(price_matrix_gbm, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I))
+        GBM_v.append(
+            LSMC_RO(price_matrix_gbm, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, mu, theta, Sbar, "GBM"))
 
         # MR
         price_matrix_mr = MR2(T, dt, paths, sigma_mr, s, theta, Sbar)
-        MR_v.append(LSMC_RO(price_matrix_mr, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I))
+        #MR_v.append(LSMC_RO(price_matrix_mr, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I))
+        MR_v.append(
+            LSMC_RO(price_matrix_mr, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, mu, theta, Sbar, "MR1"))
 
         NPV.append(NPV1(s, A, Q, epsilon, O_M, wacc, Tc, I, T_plant))
     threshold_GBM = thresholdvalue(GBM_v, NPV, S_0)
@@ -68,8 +74,7 @@ if __name__ == "__main__":
     df["value MR"] = MR_v
     df["NPV"] = NPV
 
-    DF = (1-(1+wacc)**(-T_plant))/wacc
-    NPV0 = (A * Q - O_M)/(epsilon * Q) - I/((1 - Tc) * DF * epsilon * Q)
+    NPV0 = NPV_TP(A, Q, epsilon, O_M, wacc, I, T_plant)
     row = ["threshold prices: ", threshold_GBM, threshold_MR, NPV0]
     df.loc[len(df)] = row
 
