@@ -6,31 +6,29 @@ from Real_Option.MR import MR2
 from Real_Option.threshold_value import NPV1, thresholdvalue, NPV_TP
 
 if __name__ == "__main__":
-    # todo: check inputs
-
     # inputs:
     # real option setting
     A = 30.00
     Q = 4993200
-    epsilon = 1/0.5
+    epsilon = 1/0.6
     O_M = 25*600*1000
     I = 850*1000*600
-    Tc = 0.21
+    Tc = 0.0
     wacc = 0.056
     T_plant = 30
 
     # initial gas price
-    S_0 = np.linspace(4.5, 5.5, 20)
-    #S_0 = np.linspace(0.5, 4, 40)
+    S_0 = np.linspace(4, 12, 40)
+    #S_0 = np.linspace(0.5, 7, 40)
 
     # GBM
     mu = 0.05743
     sigma_gbm = 0.32048
 
     # MR
-    Sbar = 9.801
-    theta = 0.044
-    sigma_mr = 0.15289
+    Sbar = 15.305
+    theta = 0.006
+    sigma_mr = 0.17152
 
     # life of the option(in years)
     T = 25
@@ -50,15 +48,15 @@ if __name__ == "__main__":
         price_matrix_gbm = GBM(T, dt, paths, mu, sigma_gbm, s)
         #GBM_v.append(LSMC_RO(price_matrix_gbm, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I))
         GBM_v.append(
-            LSMC_RO(price_matrix_gbm, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, mu, theta, Sbar, "GBM"))
+            LSMC_RO(price_matrix_gbm, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, I))
 
         # MR
         price_matrix_mr = MR2(T, dt, paths, sigma_mr, s, theta, Sbar)
         #MR_v.append(LSMC_RO(price_matrix_mr, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I))
         MR_v.append(
-            LSMC_RO(price_matrix_mr, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, mu, theta, Sbar, "MR1"))
+            LSMC_RO(price_matrix_mr, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, I))
 
-        NPV.append(NPV1(s, A, Q, epsilon, O_M, wacc, Tc, I, T_plant))
+        NPV.append(NPV1(s, A, Q, epsilon, O_M, wacc, I, T_plant))
     threshold_GBM = thresholdvalue(GBM_v, NPV, S_0)
     threshold_MR = thresholdvalue(MR_v, NPV, S_0)
     print("thresholdprice GBM: ", threshold_GBM, "thresholdprice MR: ",  threshold_MR)
@@ -78,7 +76,7 @@ if __name__ == "__main__":
     row = ["threshold prices: ", threshold_GBM, threshold_MR, NPV0]
     df.loc[len(df)] = row
 
-    writer = pd.ExcelWriter("raw_data/rangeS0_OOTM.xlsx", engine="xlsxwriter")
+    writer = pd.ExcelWriter("raw_data/rangeS0.xlsx", engine="xlsxwriter")
     inputs.to_excel(writer, sheet_name="inputs")
     df.to_excel(writer, sheet_name="results")
     writer.save()

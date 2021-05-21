@@ -2,7 +2,9 @@ import numpy as np
 
 
 def NPV1(price, A, Q, epsilon, O_M, r, I, T_plant):
-    Payoff = ((A - epsilon * price) * Q - O_M) / r - (((A - epsilon * price) * Q - O_M) * np.exp(-r * T_plant)) / r - I
+    x1 = (((A - epsilon * price) * Q - O_M) * np.exp(-r*T_plant))/-r
+    x2 = ((A - epsilon * price) * Q - O_M)/r
+    Payoff = x1 + x2 - I
 
     return Payoff
 

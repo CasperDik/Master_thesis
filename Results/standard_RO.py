@@ -6,15 +6,14 @@ from Real_Option.MR import MR2
 from Real_Option.threshold_value import NPV1, thresholdvalue, NPV_TP
 
 def standard_RO(paths, dt, T, s):
-    # todo: check inputs
     # inputs:
     # real option setting
     A = 30.00
     Q = 4993200
-    epsilon = 1/0.5
+    epsilon = 1/0.6
     O_M = 25*600*1000
     I = 850*1000*600
-    Tc = 0.21
+    Tc = 0.00
     wacc = 0.056
     T_plant = 30
 
@@ -26,9 +25,9 @@ def standard_RO(paths, dt, T, s):
     sigma_gbm = 0.32048 * s
 
     # MR
-    Sbar = 9.801
-    theta = 0.044
-    sigma_mr = 0.15289 * s
+    Sbar = 15.305
+    theta = 0.006
+    sigma_mr = 0.17152 * s
 
     GBM_v = []
     MR_v = []
@@ -38,15 +37,15 @@ def standard_RO(paths, dt, T, s):
         # GBM
         price_matrix_gbm = GBM(T, dt, paths, mu, sigma_gbm, s)
         # GBM_v.append(LSMC_RO(price_matrix_gbm, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I))
-        GBM_v.append(LSMC_RO(price_matrix_gbm, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, mu, theta, Sbar, "GBM"))
+        GBM_v.append(LSMC_RO(price_matrix_gbm, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, I))
 
         # MR
         price_matrix_mr = MR2(T, dt, paths, sigma_mr, s, theta, Sbar)
         #MR_v.append(LSMC_RO(price_matrix_mr, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I))
         MR_v.append(
-            LSMC_RO(price_matrix_mr, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, mu, theta, Sbar, "MR1"))
+            LSMC_RO(price_matrix_mr, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, I))
 
-        NPV.append(NPV1(s, A, Q, epsilon, O_M, wacc, Tc, I, T_plant))
+        NPV.append(NPV1(s, A, Q, epsilon, O_M, wacc, I, T_plant))
     threshold_GBM = thresholdvalue(GBM_v, NPV, S_0)
     threshold_MR = thresholdvalue(MR_v, NPV, S_0)
     threshold_NPV = NPV_TP(A, Q, epsilon, O_M, wacc, I, T_plant)

@@ -3,7 +3,6 @@ import time
 import warnings
 
 def GBM(T, dt, paths, mu, sigma, S_0):
-    np.random.seed(0)
     # start timer
     #tic = time.time()
     N = T * dt
@@ -26,7 +25,7 @@ def GBM(T, dt, paths, mu, sigma, S_0):
     return price_matrix
 
 
-def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, mu, theta, Cbar, process):
+def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, I):
     # start timer
     tic = time.time()
 
@@ -41,15 +40,15 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I
     cf_matrix = np.zeros((N + 1, paths*2))
 
     # calculated cf when executed in time T (cfs European option)
-    cf_matrix[N] = payoff_executing_RO1(price_matrix[N], A, Q, epsilon, O_M, wacc, I, T_plant, mu, theta, Cbar, process)
+    cf_matrix[N] = payoff_executing_RO1(price_matrix[N], A, Q, epsilon, O_M, wacc, I, T_plant)
     #cf_matrix[N] = payoff_executing_RO(price_matrix[N], A, Q, epsilon, O_M, wacc, Tc, I, T_plant)
 
     # 1 if in the money, otherwise 0
-    execute = np.where(payoff_executing_RO1(price_matrix, A, Q, epsilon, O_M, wacc, I, T_plant, mu, theta, Cbar, process) > 0, 1, 0)
-    #execute = np.where(payoff_executing_RO(price_matrix, A, Q, epsilon, O_M, wacc, Tc, I, T_plant) > 0, 1, 0)
+    execute = np.where(payoff_executing_RO1(price_matrix, A, Q, epsilon, O_M, wacc, I, T_plant) > 0, 1, 0)
+    # execute = np.where(payoff_executing_RO(price_matrix, A, Q, epsilon, O_M, wacc, Tc, I, T_plant) > 0, 1, 0)
     # execute = np.ones_like(execute)       # use to convert to consider all paths
 
-    for t in range(1, N):
+    for t in range(1, N+1):
         # discounted cf 1 time period
         discounted_cf = cf_matrix[N - t + 1] * np.exp(-r)
 
@@ -74,7 +73,7 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I
             cont_value = np.polyval(regression, X1)
 
             # update cash flow matrix
-            imm_ex = payoff_executing_RO1(X1, A, Q, epsilon, O_M, wacc, I, T_plant, mu, theta, Cbar, process)
+            imm_ex = payoff_executing_RO1(X1, A, Q, epsilon, O_M, wacc, I, T_plant)
             #imm_ex = payoff_executing_RO(X1, A, Q, epsilon, O_M, wacc, Tc, I, T_plant)
             cf_matrix[N - t] = np.ma.where(imm_ex > cont_value, imm_ex, cf_matrix[N - t + 1] * np.exp(-r))
             cf_matrix[N - t + 1:] = np.ma.where(imm_ex > cont_value, 0, cf_matrix[N - t + 1:])
@@ -84,7 +83,7 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I
             cf_matrix[N - t] = cf_matrix[N - t + 1] * np.exp(-r)
 
     # obtain option value
-    cf_matrix[0] = cf_matrix[1] * np.exp(-r)
+    #cf_matrix[0] = cf_matrix[1] * np.exp(-r)
     option_value = np.sum(cf_matrix[0]) / (paths*2)
 
     # st dev
@@ -100,29 +99,11 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I
     return option_value
 
 
-def payoff_executing_RO1(price, A, Q, epsilon, O_M, wacc, I, T_plant, mu, theta, Cbar, process):
-    if process == "GBM":
-        p1 = (A*Q - O_M) / wacc
-        p2 = ((A*Q - O_M) * np.exp(-wacc * T_plant)) / wacc
-        p3 = (epsilon * price * Q) / (wacc - mu)
-        p4 = ((epsilon * price * Q) * np.exp((mu - wacc) * T_plant)) / (wacc - mu)
-        payoff = p1 - p2 - p3 + p4 - I
-
-        return payoff.clip(min=0)
-
-    if process == "MR1":
-        p1 = (A * Q - O_M - epsilon * Cbar * Q) / wacc
-        p2 = ((A * Q - O_M - epsilon * Cbar * Q) * np.exp(-wacc * T_plant)) / wacc
-        p3 = (epsilon * Q * (price - Cbar)) / (-theta - wacc)
-        p4 = ((epsilon * Q * (price - Cbar)) * np.exp((-theta - wacc) * T_plant)) / (-theta - wacc)
-        payoff = p1 - p2 - p3 + p4 - I
-
-        return payoff.clip(min=0)
-
-    else:
-        print("Unknown stochastic process used")
-        raise SystemExit(0)
-
+def payoff_executing_RO1(price, A, Q, epsilon, O_M, wacc, I, T_plant):
+    x1 = (((A - epsilon * price) * Q - O_M)*np.exp(-wacc*T_plant))/-wacc
+    x2 = ((A - epsilon * price) * Q - O_M)/wacc
+    Payoff = x1 + x2 - I
+    return Payoff.clip(min=0)
 
 def payoff_executing_RO(price, A, Q, epsilon, O_M, wacc, Tc, I, T_plant):
     # discount factor
@@ -136,22 +117,22 @@ if __name__ == "__main__":
     # inputs
 
     # electricity price
-    A = 30.38
+    A = 30.00
     # Quantity per year
     Q = 4993200
     # efficiency rate of the plant
     epsilon = 1/0.6
     # maintenance and operating cost per year
-    O_M = 13200000
+    O_M = 15000000
     # initial investment
-    I = 487200000
+    I =  510000000.00
     # tax rate
     Tc = 0.00
     # discount rate (WACC?)
     wacc = 0.056
 
     # initial gas price
-    S_0 = 8.00
+    S_0 = 8.591966814
     # drift rate mu of gas price
     mu = 0.0
     # volatility of the gas price
@@ -171,6 +152,6 @@ if __name__ == "__main__":
     theta = 0
 
     #price_matrix = MR2(T, dt, paths, sigma, S_0, theta, Sbar)
-    price_matrix = GBM(T, dt, paths, mu, sigma, S_0)
+    #price_matrix = GBM(T, dt, paths, mu, sigma, S_0)
 
-    value = LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, mu, theta, Sbar, process)
+    #value = LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, Tc, I, mu, theta, Sbar, "MR1")
