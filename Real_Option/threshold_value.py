@@ -16,13 +16,14 @@ def NPV_TP(A, Q, epsilon, O_M, r, I, T_plant):
 def thresholdvalue(OV, NPV, S_0):
     insurance_value = (np.array(OV) - np.array(NPV))
 
-    for x in range(len(insurance_value) - 1):
+    for x in range(len(insurance_value)):
         if abs(insurance_value[x]) < 0.001:
             insurance_value[x] = 0
 
     # smallest value greater than zero
     min_val = min(i for i in insurance_value if i > 0)
     # get index of smallest value
+
     idx = list(insurance_value).index(min_val)
 
     # approximation of the threshold value
