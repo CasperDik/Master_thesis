@@ -65,7 +65,7 @@ inputs = pd.DataFrame({"_": ["A", "Q", "Epsilon", "O&M", "wacc", "Tplant", "S0",
                                "Inputs": [A, Q, epsilon, O_M, wacc, T_plant, S_0, mu, Sbar, theta,
                                           dt, paths, T]})
 
-writer = pd.ExcelWriter("raw_data/rangeS0.xlsx", engine="xlsxwriter")
+writer = pd.ExcelWriter("raw_data/sigma_I_table.xlsx", engine="xlsxwriter")
 inputs.to_excel(writer, sheet_name="inputs")
 thresholds.to_excel(writer, sheet_name="results")
 writer.save()
