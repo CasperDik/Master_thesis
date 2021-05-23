@@ -4,7 +4,7 @@ import warnings
 
 def GBM(T, dt, paths, mu, sigma, S_0):
     # start timer
-    #tic = time.time()
+    tic = time.time()
     N = T * dt
     N = int(N)
     dt = 1 / dt
@@ -18,9 +18,9 @@ def GBM(T, dt, paths, mu, sigma, S_0):
     price_matrix = S_0 * price_matrix.cumprod(axis=0)
 
     # Time and print the elapsed time
-    #toc = time.time()
-    #elapsed_time = toc - tic
-    #print('Total running time of GBM: {:.2f} seconds'.format(elapsed_time))
+    toc = time.time()
+    elapsed_time = toc - tic
+    print('Total running time of GBM: {:.2f} seconds'.format(elapsed_time))
 
     return price_matrix
 
