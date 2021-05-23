@@ -14,11 +14,11 @@ Sbar = 15.261
 theta = 0.254
 sigma_mr = 0.22777
 
-T = 10
+T = 1
 dt = 50
 paths = 25000
 
-S_0 = np.linspace(1, 15, 30)
+S_0 = np.linspace(1, 15, 100)
 Pinvesting_gbm = []
 Pinvesting_mr = []
 

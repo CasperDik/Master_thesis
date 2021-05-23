@@ -18,7 +18,7 @@ if __name__ == "__main__":
 
     df = pd.DataFrame(columns=["power", "lag", "leg", "cheb", "herm", "FD"])
     i = 0
-    polydegree = 6
+    polydegree = 4
     for K in [32, 36, 40]:
         for _ in range(5):
             i += 1

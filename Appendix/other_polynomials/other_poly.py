@@ -313,9 +313,8 @@ if __name__ == "__main__":
     q = 0.00
     mu = r - q
 
-    polydegree = 2
     price_matrix = GBM(T, dt, paths, mu, sigma, S_0)
-    polydegree = 6
+    polydegree = 4
 
 
     power = LSMC(price_matrix, K, r, paths, T, dt, "call")
