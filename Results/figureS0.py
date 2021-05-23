@@ -26,9 +26,9 @@ if __name__ == "__main__":
     sigma_gbm = 0.32048
 
     # MR
-    Sbar = 15.305
-    theta = 0.006
-    sigma_mr = 0.17152
+    Sbar = 15.261
+    theta = 0.254
+    sigma_mr = 0.22777
 
     # life of the option(in years)
     T = 25

@@ -28,11 +28,11 @@ mu = 0.05743
 sigma_gbm = 0.32048
 
 # MR
-# Sbar = 15.305
-Sbar1 = [10, 15.305, 20]
-theta1 = [0.1, 0.3, 0.5]
-# theta = 0.006
-sigma_mr = 0.17152
+# Sbar = 15.261
+Sbar1 = [10, 15, 20]
+theta1 = [0.1, 0.254, 0.5]
+# theta = 0.254
+sigma_mr = 0.22777
 
 thresholds = pd.DataFrame(columns=["theta", "Cbar", "threshold MR"])
 

@@ -29,15 +29,15 @@ S_0 = np.linspace(0.5, 16, 40)
 mu = 0.05743
 
 # MR
-Sbar = 15.305
-theta = 0.006
+Sbar = 15.261
+theta = 0.254
 
 thresholds = pd.DataFrame(columns=["sigma gbm", "sigma mr", "I", "threshold MR", "threshold GBM", "threshold NPV"])
 
 for I in I1:
     for x in s1:
         sigma_gbm = 0.32048 * x
-        sigma_mr = 0.17152 * x
+        sigma_mr = 0.22777 * x
         GBM_v = []
         MR_v = []
         NPV = []

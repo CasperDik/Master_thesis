@@ -25,9 +25,9 @@ def standard_RO(paths, dt, T, s):
     sigma_gbm = 0.32048 * s
 
     # MR
-    Sbar = 15.305
-    theta = 0.006
-    sigma_mr = 0.17152 * s
+    Sbar = 15.261
+    theta = 0.254
+    sigma_mr = 0.22777 * s
 
     GBM_v = []
     MR_v = []
