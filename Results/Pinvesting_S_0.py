@@ -1,9 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+
 from Real_Option.RO_LSMC import GBM
 from Real_Option.MR import MR2
-
-# todo: range with different T --> threshold price differs per T
 
 # GBM
 mu = 0.05743
@@ -18,11 +18,11 @@ T = 1
 dt = 50
 paths = 25000
 
-S_0 = np.linspace(1, 15, 100)
+S_0 = np.linspace(1, 20, 100)
 Pinvesting_gbm = []
 Pinvesting_mr = []
 
-# todo: these differ per T(and dt)
+# todo: plug in actual threshold prices
 thresholdvalue_mr = 5
 thresholdvalue_gbm = 6
 
@@ -41,5 +41,9 @@ plt.plot(S_0, Pinvesting_mr, label="MR")
 plt.legend()
 plt.show()
 
-# todo: store to excel
+df = pd.DataFrame(columns=["S_0", "Pinvesting GBM", "Pinvesting MR"])
+df["S_0"] = S_0
+df["Pinvesting GBM"] = Pinvesting_gbm
+df["Pinvesting MR"] = Pinvesting_mr
+df.to_excel("raw_data/Pinvesting_S_0.xlsx")
 

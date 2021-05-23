@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from Real_Option.RO_LSMC import GBM
 from Real_Option.MR import MR2
+import pandas as pd
 
 # GBM
 mu = 0.05743
@@ -12,33 +13,39 @@ Sbar = 15.261
 theta = 0.254
 sigma_mr = 0.22777
 
-# todo: same as range T plot
-T =
+inputs = pd.read_excel("raw_data/time_to_maturity.xlsx", sheet_name="results")
+
+T = inputs["Time to maturity"].to_numpy()
 dt = 50
 paths = 25000
 
-# todo: todays natural gas price in MWh?
-S_0 =
+S_0 = 2.90 / 0.29329722222222
 Pinvesting_gbm = []
 Pinvesting_mr = []
 
-# todo: these differ per T(and dt) --> use threshold values of range T plot
-thresholdvalue_mr = 5
-thresholdvalue_gbm = 6
+thresholdvalue_mr = inputs["threshold price GBM"].to_numpy()
+thresholdvalue_gbm = inputs["threshold price MR"].to_numpy()
 
-for s in S_0:
-    price_matrix_gbm = GBM(T, dt, paths, mu, sigma_gbm, s)
-    price_matrix_mr = MR2(T, dt, paths, sigma_mr, s, theta, Sbar)
+i = 0
+for t in T:
+    price_matrix_gbm = GBM(t, dt, paths, mu, sigma_gbm, S_0)
+    price_matrix_mr = MR2(t, dt, paths, sigma_mr, S_0, theta, Sbar)
     # minimal values of each path
     GBM_min = price_matrix_gbm[1:].min(axis=0)
     MR_min = price_matrix_mr[1:].min(axis=0)
     # sum if min value above threshold
-    Pinvesting_mr.append(sum(MR_min < thresholdvalue_gbm)/(paths * 2))
-    Pinvesting_gbm.append(sum(GBM_min < thresholdvalue_mr)/(paths * 2))
 
-plt.plot(S_0, Pinvesting_gbm, label="GBM")
-plt.plot(S_0, Pinvesting_mr, label="MR")
+    Pinvesting_mr.append(sum(MR_min < thresholdvalue_gbm[i])/(paths * 2))
+    Pinvesting_gbm.append(sum(GBM_min < thresholdvalue_mr[i])/(paths * 2))
+    i += 1
+
+plt.plot(T, Pinvesting_gbm, label="GBM")
+plt.plot(T, Pinvesting_mr, label="MR")
 plt.legend()
 plt.show()
 
-# todo: store to excel
+df = pd.DataFrame(columns=["T", "Pinvesting GBM", "Pinvesting MR"])
+df["T"] = T
+df["Pinvesting GBM"] = Pinvesting_gbm
+df["Pinvesting MR"] = Pinvesting_mr
+df.to_excel("raw_data/Pinvesting_T.xlsx")
