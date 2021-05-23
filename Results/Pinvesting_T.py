@@ -13,6 +13,7 @@ Sbar = 15.261
 theta = 0.254
 sigma_mr = 0.22777
 
+# todo: check if correct sheet is at right place with right name
 inputs = pd.read_excel("raw_data/time_to_maturity.xlsx", sheet_name="results")
 
 T = inputs["Time to maturity"].to_numpy()
