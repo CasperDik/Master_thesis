@@ -21,7 +21,7 @@ wacc = 0.056
 T_plant = 30
 
 # initial gas price
-S_0 = np.linspace(0.5, 16, 40)
+S_0 = np.linspace(0.5, 16, 60)
 
 # GBM
 mu = 0.05743
@@ -29,8 +29,8 @@ sigma_gbm = 0.32048
 
 # MR
 # Sbar = 15.305
-Sbar1 = [15.305/1.4, 15.305, 15.305*1.4]
-theta1 = [0, 0.2, 0.4]
+Sbar1 = [10, 15.305, 20]
+theta1 = [0.1, 0.3, 0.5]
 # theta = 0.006
 sigma_mr = 0.17152
 

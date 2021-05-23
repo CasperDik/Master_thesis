@@ -36,7 +36,7 @@ def MR1(T, dt, paths, sigma, S_0, theta, Sbar):
     MR_matrix = np.zeros_like(wiener)
     MR_matrix[0] = S_0
     for i in range(1, N + 1):
-        dx = theta * (Sbar - MR_matrix[i - 1]) + wiener[i]
+        dx = theta * (Sbar - MR_matrix[i - 1]) * dt + wiener[i] * MR_matrix[i - 1]
         MR_matrix[i] = MR_matrix[i - 1] + dx
 
     toc = time.time()
@@ -107,7 +107,7 @@ def MR3(T, dt, paths, sigma_g, sigma_e, S_0, theta_e, theta_g, Sbar, LR_0):
 if __name__ == "__main__":
     T = 1
     dt = 365
-    paths = 10
+    paths = 1
 
     theta = 2
     sigma = 0.2
