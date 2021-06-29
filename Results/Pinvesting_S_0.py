@@ -14,7 +14,7 @@ Sbar = 15.261
 theta = 0.254
 sigma_mr = 0.22777
 
-T = 1
+T = 25
 dt = 50
 paths = 25000
 
@@ -22,9 +22,9 @@ S_0 = np.linspace(1, 20, 100)
 Pinvesting_gbm = []
 Pinvesting_mr = []
 
-# todo: plug in actual threshold prices
-thresholdvalue_mr = 5
-thresholdvalue_gbm = 6
+
+thresholdvalue_mr = 9.23
+thresholdvalue_gbm = 6.66
 
 for s in S_0:
     price_matrix_gbm = GBM(T, dt, paths, mu, sigma_gbm, s)

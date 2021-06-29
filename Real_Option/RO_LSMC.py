@@ -40,12 +40,10 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, I):
     cf_matrix = np.zeros((N + 1, paths*2))
 
     # calculated cf when executed in time T (cfs European option)
-    cf_matrix[N] = payoff_executing_RO1(price_matrix[N], A, Q, epsilon, O_M, wacc, I, T_plant)
-    #cf_matrix[N] = payoff_executing_RO(price_matrix[N], A, Q, epsilon, O_M, wacc, Tc, I, T_plant)
+    cf_matrix[N] = payoff_executing_RO(price_matrix[N], A, Q, epsilon, O_M, wacc, I, T_plant)
 
     # 1 if in the money, otherwise 0
-    execute = np.where(payoff_executing_RO1(price_matrix, A, Q, epsilon, O_M, wacc, I, T_plant) > 0, 1, 0)
-    # execute = np.where(payoff_executing_RO(price_matrix, A, Q, epsilon, O_M, wacc, Tc, I, T_plant) > 0, 1, 0)
+    execute = np.where(payoff_executing_RO(price_matrix, A, Q, epsilon, O_M, wacc, I, T_plant) > 0, 1, 0)
     # execute = np.ones_like(execute)       # use to convert to consider all paths
 
     for t in range(1, N+1):
@@ -73,8 +71,7 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, I):
             cont_value = np.polyval(regression, X1)
 
             # update cash flow matrix
-            imm_ex = payoff_executing_RO1(X1, A, Q, epsilon, O_M, wacc, I, T_plant)
-            #imm_ex = payoff_executing_RO(X1, A, Q, epsilon, O_M, wacc, Tc, I, T_plant)
+            imm_ex = payoff_executing_RO(X1, A, Q, epsilon, O_M, wacc, I, T_plant)
             cf_matrix[N - t] = np.ma.where(imm_ex > cont_value, imm_ex, cf_matrix[N - t + 1] * np.exp(-r))
             cf_matrix[N - t + 1:] = np.ma.where(imm_ex > cont_value, 0, cf_matrix[N - t + 1:])
 
@@ -83,29 +80,24 @@ def LSMC_RO(price_matrix, wacc, paths, T, T_plant, dt, A, Q, epsilon, O_M, I):
             cf_matrix[N - t] = cf_matrix[N - t + 1] * np.exp(-r)
 
     # obtain option value
-    #cf_matrix[0] = cf_matrix[1] * np.exp(-r)
     option_value = np.sum(cf_matrix[0]) / (paths*2)
-
-    # st dev
-    st_dev = np.std(cf_matrix[0])/np.sqrt(paths)
 
     # Time and print the elapsed time
     toc = time.time()
     elapsed_time = toc - tic
     print('Total running time of LSMC: {:.2f} seconds'.format(elapsed_time), "\n")
     print("Value of this option is:", option_value)
-    print("St dev of this option is:", st_dev, "\n")
 
     return option_value
 
 
-def payoff_executing_RO1(price, A, Q, epsilon, O_M, wacc, I, T_plant):
+def payoff_executing_RO(price, A, Q, epsilon, O_M, wacc, I, T_plant):
     x1 = (((A - epsilon * price) * Q - O_M)*np.exp(-wacc*T_plant))/-wacc
     x2 = ((A - epsilon * price) * Q - O_M)/wacc
     Payoff = x1 + x2 - I
     return Payoff.clip(min=0)
 
-def payoff_executing_RO(price, A, Q, epsilon, O_M, wacc, Tc, I, T_plant):
+def payoff_executing_RO1(price, A, Q, epsilon, O_M, wacc, Tc, I, T_plant):
     # discount factor
     DF = (1-(1+wacc)**(-T_plant))/wacc
     Payoff = (((A - epsilon * price) * Q - O_M) * (1 - Tc) * DF) - I

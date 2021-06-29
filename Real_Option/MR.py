@@ -41,7 +41,7 @@ def MR1(T, dt, paths, sigma, S_0, theta, Sbar):
 
     toc = time.time()
     elapsed_time = toc - tic
-    print('Total running time of MR2: {:.2f} seconds'.format(elapsed_time))
+    print('Total running time of MR1: {:.2f} seconds'.format(elapsed_time))
 
     return MR_matrix
 
@@ -107,7 +107,7 @@ def MR3(T, dt, paths, sigma_g, sigma_e, S_0, theta_e, theta_g, Sbar, LR_0):
 if __name__ == "__main__":
     T = 1
     dt = 365
-    paths = 1
+    paths = 10
 
     theta = 2
     sigma = 0.2
@@ -122,12 +122,12 @@ if __name__ == "__main__":
 
     MR1 = MR1(T, dt, paths, sigma, S_0, theta, Sbar)
     MR2 = MR2(T, dt, paths, sigma, S_0, theta, Sbar)
-    MR3 = MR3(T, dt, paths, sigma_g, sigma_e, S_0, theta_e, theta_g, Sbar, LR_0)
+    #MR3 = MR3(T, dt, paths, sigma_g, sigma_e, S_0, theta_e, theta_g, Sbar, LR_0)
 
     N = T * dt
     plt.plot(np.linspace(0, N, N + 1), MR1, label="MR1", c="r", alpha=0.3)
     plt.plot(np.linspace(0, N, N + 1), MR2, label="MR2", c="b", alpha=0.3)
-    plt.plot(np.linspace(0, N + 1, N + 1), MR3, label="MR3", c="y", alpha=0.2)
+    #plt.plot(np.linspace(0, N + 1, N + 1), MR3, label="MR3", c="y", alpha=0.2)
 
     plt.show()
 

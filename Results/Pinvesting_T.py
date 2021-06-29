@@ -14,7 +14,7 @@ theta = 0.254
 sigma_mr = 0.22777
 
 # todo: check if correct sheet is at right place with right name
-inputs = pd.read_excel("raw_data/time_to_maturity.xlsx", sheet_name="results")
+inputs = pd.read_excel("raw_data/time_to_maturity_pinvesting.xlsx", sheet_name="results")
 
 T = inputs["Time to maturity"].to_numpy()
 dt = 50
@@ -31,11 +31,12 @@ i = 0
 for t in T:
     price_matrix_gbm = GBM(t, dt, paths, mu, sigma_gbm, S_0)
     price_matrix_mr = MR2(t, dt, paths, sigma_mr, S_0, theta, Sbar)
+
     # minimal values of each path
     GBM_min = price_matrix_gbm[1:].min(axis=0)
     MR_min = price_matrix_mr[1:].min(axis=0)
-    # sum if min value above threshold
 
+    # sum if min value above threshold
     Pinvesting_mr.append(sum(MR_min < thresholdvalue_gbm[i])/(paths * 2))
     Pinvesting_gbm.append(sum(GBM_min < thresholdvalue_mr[i])/(paths * 2))
     i += 1

@@ -124,15 +124,15 @@ if __name__ == "__main__":
 
     paths = 20000
     # years
-    T = 2
+    T = 2.463
     # execute possibilities per year
-    dt = 50
+    dt = 150
 
-    K = 36
-    S_0 = 36
-    sigma = 0.2
-    r = 0.06
-    q = 0.00
+    K = 800
+    S_0 = 585
+    sigma = 0.28
+    r = 0.025
+    q = 0.008
     mu = r - q
 
     price_matrix = GBM(T, dt, paths, mu, sigma, S_0)

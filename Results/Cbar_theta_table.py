@@ -21,7 +21,7 @@ wacc = 0.056
 T_plant = 30
 
 # initial gas price
-S_0 = np.linspace(0.5, 16, 60)
+S_0 = np.linspace(2, 4, 13)
 
 # GBM
 mu = 0.05743
@@ -29,8 +29,8 @@ sigma_gbm = 0.32048
 
 # MR
 # Sbar = 15.261
-Sbar1 = [10, 15, 20]
-theta1 = [0.1, 0.254, 0.5]
+Sbar1 = [2.5]
+theta1 = [0.5]
 # theta = 0.254
 sigma_mr = 0.22777
 
@@ -54,6 +54,7 @@ for theta in theta1:
 
 thresholds.loc[len(thresholds)] = ["Threshold NPV", NPV_TP(A, Q, epsilon, O_M, wacc, I, T_plant), "_"]
 
+"""
 GBM_v = []
 NPV = []
 for s in S_0:
@@ -63,13 +64,14 @@ for s in S_0:
 
 threshold_GBM = thresholdvalue(GBM_v, NPV, S_0)
 thresholds.loc[len(thresholds)] = ["Threshold GBM", threshold_GBM, "_"]
+"""
 
 inputs = pd.DataFrame({"_": ["A", "Q", "Epsilon", "O&M", "I", "Tc", "wacc", "Tplant", "S0", "mu", "sigmaGBM",
                             "sigmaMR", "dt", "paths", "T"],
                        "Inputs": [A, Q, epsilon, O_M, I, Tc, wacc, T_plant, S_0, mu, sigma_gbm,
                                   sigma_mr, dt, paths, T]})
 
-writer = pd.ExcelWriter("raw_data/Cbar_theta_table.xlsx", engine="xlsxwriter")
+writer = pd.ExcelWriter("raw_data/Cbar_theta_table_add.xlsx", engine="xlsxwriter")
 inputs.to_excel(writer, sheet_name="inputs")
 thresholds.to_excel(writer, sheet_name="results")
 writer.save()
